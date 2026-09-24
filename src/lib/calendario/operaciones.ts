@@ -19,7 +19,10 @@ export async function cuentaEstaConectada(proveedor: "GOOGLE" | "MICROSOFT"): Pr
 }
 
 // Sincroniza reuniones desde el proveedor a la BD local
-export async function sincronizarReuniones(proveedor: ProveedorCalendario): Promise<number> {
+export async function sincronizarReuniones(
+  proveedor: ProveedorCalendario,
+  tipoProveedor: "GOOGLE" | "MICROSOFT",
+): Promise<number> {
   const ahora = new Date();
   const hace30dias = new Date(ahora);
   hace30dias.setDate(hace30dias.getDate() - 30);
@@ -36,15 +39,15 @@ export async function sincronizarReuniones(proveedor: ProveedorCalendario): Prom
 
   const prisma = obtenerPrisma();
   const cuenta = await prisma.cuentaCalendario.findUnique({
-    where: { proveedor_usuarioId: { proveedor: "GOOGLE", usuarioId: USUARIO_ID } },
+    where: { proveedor_usuarioId: { proveedor: tipoProveedor, usuarioId: USUARIO_ID } },
   });
   if (!cuenta) throw new ErrorCalendario("Cuenta no conectada.", "no-configurado");
 
   const upserts = eventos.map((evento) =>
     prisma.reunion.upsert({
-      where: { proveedor_idExterno: { proveedor: "GOOGLE", idExterno: evento.idExterno } },
+      where: { proveedor_idExterno: { proveedor: tipoProveedor, idExterno: evento.idExterno } },
       create: {
-        proveedor: "GOOGLE",
+        proveedor: tipoProveedor,
         idExterno: evento.idExterno,
         titulo: evento.titulo,
         descripcion: evento.descripcion,
@@ -69,7 +72,7 @@ export async function sincronizarReuniones(proveedor: ProveedorCalendario): Prom
 
 // Guarda una reunión creada en el proveedor externo
 export async function guardarReunion(
-  proveedor: "GOOGLE",
+  proveedor: "GOOGLE" | "MICROSOFT",
   evento: EventoCalendario,
   cuentaCalendarioId: string,
 ) {
