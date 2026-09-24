@@ -161,7 +161,7 @@ model Tarea {
   @@map("tarea")
 }
 
-// Una ocurrencia completada; la clave única [tareaId, fecha] impide duplicar el registro del mismo día
+// Una ocurrencia completada; la clave única [tareaId, fecha] impede duplicar el registro del mismo día
 model TareaCompletada {
   tareaId       String   @map("tarea_id")
   fecha         DateTime @db.Date                     // día local, sin hora
@@ -171,4 +171,49 @@ model TareaCompletada {
   @@id([tareaId, fecha])
   @@index([fecha])
   @@map("tarea_completada")
+}
+
+enum ProveedorCalendario {
+  GOOGLE     @map("google")
+  MICROSOFT  @map("microsoft")
+
+  @@map("proveedor_calendario")
+}
+
+// Cuenta conectada para acceder a un calendario externo; single-user con usuarioId fijo "unico"
+model CuentaCalendario {
+  id              String             @id @default(cuid())
+  proveedor       ProveedorCalendario
+  usuarioId       String             @default("unico") @map("usuario_id")
+  accessTokenCifrado   String?        @map("access_token_cifrado")
+  refreshTokenCifrado  String         @map("refresh_token_cifrado")
+  expiresAt       DateTime?          @map("expires_at")
+  scope           String?
+  syncToken       String?            @map("sync_token")
+  creadoEn        DateTime           @default(now()) @map("creado_en")
+  actualizadoEn   DateTime           @updatedAt @map("actualizado_en")
+  reuniones       Reunion[]
+
+  @@unique([proveedor, usuarioId])
+  @@map("cuenta_calendario")
+}
+
+// Reunión sincronizada desde un calendario externo
+model Reunion {
+  id                  String           @id @default(cuid())
+  proveedor           ProveedorCalendario
+  idExterno           String           @map("id_externo")
+  titulo              String
+  descripcion         String?
+  inicio              DateTime
+  fin                 DateTime
+  enlaceReunion       String?          @map("enlace_reunion")
+  cuentaCalendarioId  String           @map("cuenta_calendario_id")
+  cuentaCalendario    CuentaCalendario @relation(fields: [cuentaCalendarioId], references: [id], onDelete: Cascade)
+  creadoEn            DateTime         @default(now()) @map("creado_en")
+  actualizadoEn       DateTime         @updatedAt @map("actualizado_en")
+
+  @@unique([proveedor, idExterno])
+  @@index([cuentaCalendarioId, inicio])
+  @@map("reunion")
 }
