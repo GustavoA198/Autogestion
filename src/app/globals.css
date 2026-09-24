@@ -1,17 +1,102 @@
 @import "tailwindcss";
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "autogestion-dark-lime";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #d6ff3d;
+  --color-primary-content: #0b0f1a;
+  --color-secondary: #3b82f6;
+  --color-secondary-content: #0b0f1a;
+  --color-accent: #22c55e;
+  --color-accent-content: #0b0f1a;
+  --color-neutral: #1f2937;
+  --color-neutral-content: #f4f4f5;
+  --color-base-100: #0b0f1a;
+  --color-base-200: #111827;
+  --color-base-300: #1f2937;
+  --color-base-content: #f4f4f5;
+  --color-info: #3b82f6;
+  --color-info-content: #0b0f1a;
+  --color-success: #22c55e;
+  --color-success-content: #0b0f1a;
+  --color-warning: #f5b547;
+  --color-warning-content: #0b0f1a;
+  --color-error: #d946ef;
+  --color-error-content: #0b0f1a;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 9999px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, sans-serif;
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  .saltar-al-contenido:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Borde de campos con 3:1 mínimo (WCAG 1.4.11); fuera de las capas para vencer al 20% de DaisyUI y sin pisar el estado de error */
+.input:not(.input-error),
+.select:not(.select-error),
+.textarea:not(.textarea-error),
+.checkbox:not(
+  .checkbox-primary,
+  .checkbox-secondary,
+  .checkbox-accent,
+  .checkbox-neutral,
+  .checkbox-info,
+  .checkbox-success,
+  .checkbox-warning,
+  .checkbox-error
+) {
+  --input-color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+}
+
+/* Fuera de las capas para que el foco visible no lo anule el menú de DaisyUI */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
