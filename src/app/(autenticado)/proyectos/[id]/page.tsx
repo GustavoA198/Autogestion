@@ -10,6 +10,7 @@ import { BotonEliminar } from "./boton-eliminar";
 import { SeccionCredenciales } from "./seccion-credenciales";
 import { SeccionContactos } from "./seccion-contactos";
 import { SeccionNotas } from "./seccion-notas";
+import { SeccionTareas } from "./seccion-tareas";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,7 @@ export default async function FichaProyecto({ params }: PageProps<"/proyectos/[i
           )}
         </Tarjeta>
         <SeccionNotas proyectoId={proyecto.id} />
+        <SeccionTareas proyectoId={proyecto.id} />
         <div className="grid gap-6 md:grid-cols-2">
           <SeccionCredenciales proyectoId={proyecto.id} />
           <SeccionContactos proyectoId={proyecto.id} />

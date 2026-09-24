@@ -28,6 +28,7 @@ model Proyecto {
   credenciales        CredencialProyecto[]
   contactos           ContactoProyecto[]
   notas               Nota[]
+  tareas              Tarea[]
 
   @@map("proyecto")
 }
@@ -128,4 +129,46 @@ model Nota {
 
   @@index([proyectoId, fecha])
   @@map("nota")
+}
+
+// Frecuencia de una tarea (HU-08)
+enum FrecuenciaTarea {
+  DIARIA    @map("diaria")
+  SEMANAL   @map("semanal")
+  MENSUAL   @map("mensual")
+  PUNTUAL   @map("puntual")
+
+  @@map("frecuencia_tarea")
+}
+
+// Tarea con recurrencia configurable; puede asociarse a un proyecto o ser independiente
+model Tarea {
+  id             String         @id @default(cuid())
+  titulo         String
+  descripcion    String?
+  tipoFrecuencia FrecuenciaTarea @map("tipo_frecuencia")
+  diaSemana      Int?           @map("dia_semana")        // 0=domingo a 6=sábado, solo SEMANAL
+  diaMes         Int?           @map("dia_mes")          // 1-31, solo MENSUAL
+  fechaPuntual   DateTime?      @map("fecha_puntual")     // solo PUNTUAL
+  proyectoId     String?        @map("proyecto_id")
+  activa         Boolean        @default(true)
+  creadoEn       DateTime       @default(now()) @map("creado_en")
+  actualizadoEn  DateTime       @updatedAt @map("actualizado_en")
+  proyecto       Proyecto?      @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  completadas    TareaCompletada[]
+
+  @@index([proyectoId, activa])
+  @@map("tarea")
+}
+
+// Una ocurrencia completada; la clave única [tareaId, fecha] impide duplicar el registro del mismo día
+model TareaCompletada {
+  tareaId       String   @map("tarea_id")
+  fecha         DateTime @db.Date                     // día local, sin hora
+  completadoEn  DateTime @default(now()) @map("completado_en")
+  tarea         Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  @@id([tareaId, fecha])
+  @@index([fecha])
+  @@map("tarea_completada")
 }
