@@ -250,3 +250,21 @@ model NotificacionDescartada {
   @@id([notificacionId])
   @@map("notificacion_descartada")
 }
+
+// Registro de respaldos realizados a Google Drive (HU-15)
+enum EstadoRespaldo {
+  COMPLETADO @map("completado")
+  FALLIDO    @map("fallido")
+}
+
+model Respaldo {
+  id            String         @id @default(cuid())
+  fechaCreacion DateTime       @default(now()) @map("fecha_creacion")
+  nombreArchivo String         @map("nombre_archivo")
+  driveFileId   String?        @map("drive_file_id")
+  tamanoBytes   Int?          @map("tamano_bytes")
+  estado        EstadoRespaldo
+  mensajeError  String?       @map("mensaje_error")
+
+  @@map("respaldo")
+}
