@@ -28,3 +28,4 @@ Thumbs.db
 *.log
 *.tsbuildinfo
 .vercel
+/e2e/.auth/

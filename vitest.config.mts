@@ -7,11 +7,11 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",
-      include: ["src/**/*.ts"],
-      exclude: ["src/generated/**", "src/**/*.test.ts"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/generated/**", "src/**/*.test.{ts,tsx}"],
     },
   },
 });
