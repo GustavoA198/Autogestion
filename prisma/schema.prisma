@@ -19,12 +19,67 @@ model IntentoAcceso {
 
 // Frente de trabajo: ficha liviana con enlace a su documentación real
 model Proyecto {
-  id                  String   @id @default(cuid())
-  nombre              String   @unique
+  id                  String               @id @default(cuid())
+  nombre              String               @unique
   descripcion         String?
-  enlaceDocumentacion String?  @map("enlace_documentacion")
-  creadoEn            DateTime @default(now()) @map("creado_en")
-  actualizadoEn       DateTime @updatedAt @map("actualizado_en")
+  enlaceDocumentacion String?              @map("enlace_documentacion")
+  creadoEn            DateTime             @default(now()) @map("creado_en")
+  actualizadoEn       DateTime             @updatedAt @map("actualizado_en")
+  credenciales        CredencialProyecto[]
 
   @@map("proyecto")
+}
+
+enum CategoriaCredencial {
+  BASE_DATOS @map("base_datos")
+  SERVIDOR   @map("servidor")
+  APLICACION @map("aplicacion")
+  OTRO       @map("otro")
+
+  @@map("categoria_credencial")
+}
+
+// Acceso técnico; el secreto se guarda siempre cifrado (formato versionado v1:iv:etiqueta:cifrado)
+model Credencial {
+  id                   String                @id @default(cuid())
+  nombre               String
+  categoria            CategoriaCredencial
+  usuario              String?
+  secretoCifrado       String                @map("secreto_cifrado")
+  host                 String?
+  nota                 String?
+  global               Boolean               @default(false)
+  secretoActualizadoEn DateTime              @default(now()) @map("secreto_actualizado_en")
+  creadoEn             DateTime              @default(now()) @map("creado_en")
+  actualizadoEn        DateTime              @updatedAt @map("actualizado_en")
+  proyectos            CredencialProyecto[]
+  historial            HistorialCredencial[]
+
+  @@index([categoria])
+  @@map("credencial")
+}
+
+// Vínculo muchos-a-muchos: borrar el vínculo nunca borra la credencial ni el proyecto
+model CredencialProyecto {
+  credencialId String     @map("credencial_id")
+  proyectoId   String     @map("proyecto_id")
+  creadoEn     DateTime   @default(now()) @map("creado_en")
+  credencial   Credencial @relation(fields: [credencialId], references: [id], onDelete: Cascade)
+  proyecto     Proyecto   @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@id([credencialId, proyectoId])
+  @@index([proyectoId])
+  @@map("credencial_proyecto")
+}
+
+// Solo registra qué campo cambió y cuándo; nunca guarda valores (ni el secreto anterior ni el nuevo)
+model HistorialCredencial {
+  id           String     @id @default(cuid())
+  credencialId String     @map("credencial_id")
+  campo        String
+  fecha        DateTime   @default(now())
+  credencial   Credencial @relation(fields: [credencialId], references: [id], onDelete: Cascade)
+
+  @@index([credencialId, fecha])
+  @@map("historial_credencial")
 }
