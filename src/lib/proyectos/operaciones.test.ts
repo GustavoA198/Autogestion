@@ -9,6 +9,7 @@ const prisma = {
     deleteMany: vi.fn(),
   },
   credencial: { deleteMany: vi.fn() },
+  contacto: { deleteMany: vi.fn() },
   $transaction: vi.fn(),
 };
 
@@ -27,6 +28,7 @@ const errorPrisma = (code: string) => Object.assign(new Error("prisma"), { code 
 beforeEach(() => {
   Object.values(prisma.proyecto).forEach((mock) => mock.mockReset());
   prisma.credencial.deleteMany.mockReset();
+  prisma.contacto.deleteMany.mockReset();
   prisma.$transaction.mockReset().mockImplementation((tarea) => tarea(prisma));
 });
 
@@ -86,7 +88,7 @@ describe("eliminarProyecto", () => {
     expect(await eliminarProyecto("nada")).toBe(false);
   });
 
-  it("borra solo las credenciales exclusivas: no globales y sin otros proyectos", async () => {
+  it("borra solo las credenciales y contactos exclusivos: no globales y sin otros proyectos", async () => {
     prisma.proyecto.deleteMany.mockResolvedValue({ count: 1 });
     await eliminarProyecto("p1");
     expect(prisma.credencial.deleteMany).toHaveBeenCalledWith({
@@ -96,9 +98,16 @@ describe("eliminarProyecto", () => {
         NOT: { proyectos: { some: { proyectoId: { not: "p1" } } } },
       },
     });
+    expect(prisma.contacto.deleteMany).toHaveBeenCalledWith({
+      where: {
+        global: false,
+        proyectos: { some: { proyectoId: "p1" } },
+        NOT: { proyectos: { some: { proyectoId: { not: "p1" } } } },
+      },
+    });
   });
 
-  it("ejecuta el borrado de credenciales y del proyecto en una sola transacción", async () => {
+  it("ejecuta el borrado de credenciales, contactos y del proyecto en una sola transaccion", async () => {
     prisma.proyecto.deleteMany.mockResolvedValue({ count: 1 });
     await eliminarProyecto("p1");
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
