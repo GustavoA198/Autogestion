@@ -6,6 +6,11 @@ const FORMATO_HASH = /^scrypt:\d+:\d+:\d+:[\w-]+:[\w-]+$/;
 
 const esquemaBaseDatos = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, "debe ser una URL de PostgreSQL"),
+  // Solo para migraciones: evita pooling de pgbouncer en Vercel
+  DIRECT_URL: z
+    .string()
+    .regex(/^postgres(ql)?:\/\//, "debe ser una URL de PostgreSQL")
+    .optional(),
 });
 
 const esquemaAuth = z.object({
@@ -38,6 +43,18 @@ export function leerEntornoBaseDatos(fuente: Fuente = process.env): EntornoBaseD
 
 export function leerEntornoAuth(fuente: Fuente = process.env): EntornoAuth {
   return validar(esquemaAuth, fuente);
+}
+
+// Detecta si el código corre en Vercel (funciones serverless)
+export function estaEnVercel(): boolean {
+  return process.env.VERCEL === "1";
+}
+
+// Determina si la cookie de sesión debe marcarse como secure
+// En producción (NEXTAUTH_URL con https) la cookie es segura; en local no
+export function esProduccion(): boolean {
+  const url = process.env.NEXTAUTH_URL ?? "";
+  return url.startsWith("https://");
 }
 
 const LARGO_CLAVE_CIFRADO = 32;

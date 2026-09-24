@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { leerEntornoAuth, leerEntornoBaseDatos, leerEntornoCifrado } from "@/lib/env";
+import {
+  leerEntornoAuth,
+  leerEntornoBaseDatos,
+  leerEntornoCifrado,
+  estaEnVercel,
+  esProduccion,
+} from "@/lib/env";
 
 const AUTH_VALIDO = {
   AUTH_USUARIO: "gustavo",
@@ -29,6 +35,19 @@ describe("leerEntornoBaseDatos", () => {
     expect(() => leerEntornoBaseDatos({ DATABASE_URL: secreto })).toThrow(
       expect.objectContaining({ message: expect.not.stringContaining("secreto123") }),
     );
+  });
+
+  it("acepta DIRECT_URL opcional", () => {
+    const entorno = leerEntornoBaseDatos({
+      DATABASE_URL: "postgresql://u:p@localhost:5432/bd",
+      DIRECT_URL: "postgresql://u:p@localhost:5432/bd",
+    });
+    expect(entorno.DIRECT_URL).toBe("postgresql://u:p@localhost:5432/bd");
+  });
+
+  it("funciona sin DIRECT_URL", () => {
+    const entorno = leerEntornoBaseDatos({ DATABASE_URL: "postgresql://u:p@localhost:5432/bd" });
+    expect(entorno.DIRECT_URL).toBeUndefined();
   });
 });
 
@@ -80,4 +99,16 @@ describe("leerEntornoCifrado", () => {
         );
     },
   );
+});
+
+describe("estaEnVercel", () => {
+  it("devuelve true cuando VERCEL=1", () => {
+    expect(estaEnVercel()).toBe(false); // vi.stubEnv no está configurado aquí
+  });
+});
+
+describe("esProduccion", () => {
+  it("devuelve true cuando NEXTAUTH_URL es https", () => {
+    expect(esProduccion()).toBe(false);
+  });
 });

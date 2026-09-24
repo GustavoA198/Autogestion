@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 import { igualesSeguro, verificarClave } from "@/lib/auth/clave";
 import { obtenerIp, registrarIntento, reiniciarIntentos } from "@/lib/auth/limitador";
-import { leerEntornoAuth } from "@/lib/env";
+import { leerEntornoAuth, esProduccion } from "@/lib/env";
 
 export const DURACION_SESION_SEGUNDOS = 12 * 60 * 60;
 export const ERROR_ACCESO_BLOQUEADO = "AccesoBloqueado";
@@ -38,6 +38,17 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: DURACION_SESION_SEGUNDOS },
   jwt: { maxAge: DURACION_SESION_SEGUNDOS },
   pages: { signIn: "/login", error: "/login" },
+  cookies: {
+    sessionToken: {
+      name: esProduccion() ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: esProduccion(),
+      },
+    },
+  },
   providers: [
     CredentialsProvider({
       name: "Credenciales",
