@@ -2,6 +2,10 @@
 
 Herramienta personal para centralizar el trabajo en varios frentes o proyectos: credenciales, contactos, calendarios, tareas y notas en un solo lugar.
 
+## Despliegue
+
+La aplicacion se despliega en Vercel con PostgreSQL gestionado (Supabase o Neon). Pasos detallados en [documentacion/despliegue.md](../documentacion/despliegue.md).
+
 ## Stack
 
 - Next.js (App Router) con TypeScript estricto
