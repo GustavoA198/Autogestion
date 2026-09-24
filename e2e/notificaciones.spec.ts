@@ -14,7 +14,9 @@ test.describe("notificaciones", () => {
     await expect(page.getByText("Recordatorios internos generados automáticamente.")).toBeVisible();
   });
 
-  test("el indicador de notificaciones aparece en la cabecera cuando hay pendientes", async ({ page }) => {
+  test("el indicador de notificaciones aparece en la cabecera cuando hay pendientes", async ({
+    page,
+  }) => {
     // El indicador solo es visible si hay notificaciones; si no hay, no debe aparecer
     const indicador = page.getByRole("link", { name: /notificac/i });
     // No afirmamos visibilidad porque depende del estado de la BD
