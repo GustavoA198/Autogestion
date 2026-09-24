@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Cada intento de inicio de sesión, para limitar la fuerza bruta entre instancias
+model IntentoAcceso {
+  id       String   @id @default(cuid())
+  clave    String
+  creadoEn DateTime @default(now()) @map("creado_en")
+
+  @@index([clave, creadoEn])
+  @@map("intento_acceso")
+}
+
+// Frente de trabajo: ficha liviana con enlace a su documentación real
+model Proyecto {
+  id                  String               @id @default(cuid())
+  nombre              String               @unique
+  descripcion         String?
+  enlaceDocumentacion String?              @map("enlace_documentacion")
+  creadoEn            DateTime             @default(now()) @map("creado_en")
+  actualizadoEn       DateTime             @updatedAt @map("actualizado_en")
+  credenciales        CredencialProyecto[]
+  contactos           ContactoProyecto[]
+  notas               Nota[]
+  tareas              Tarea[]
+
+  @@map("proyecto")
+}
+
+enum CategoriaCredencial {
+  BASE_DATOS @map("base_datos")
+  SERVIDOR   @map("servidor")
+  APLICACION @map("aplicacion")
+  OTRO       @map("otro")
+
+  @@map("categoria_credencial")
+}
+
+// Acceso técnico; el secreto se guarda siempre cifrado (formato versionado v1:iv:etiqueta:cifrado)
+model Credencial {
+  id                   String                @id @default(cuid())
+  nombre               String
+  categoria            CategoriaCredencial
+  usuario              String?
+  secretoCifrado       String                @map("secreto_cifrado")
+  host                 String?
+  nota                 String?
+  global               Boolean               @default(false)
+  secretoActualizadoEn DateTime              @default(now()) @map("secreto_actualizado_en")
+  creadoEn             DateTime              @default(now()) @map("creado_en")
+  actualizadoEn        DateTime              @updatedAt @map("actualizado_en")
+  proyectos            CredencialProyecto[]
+  historial            HistorialCredencial[]
+
+  @@index([categoria])
+  @@map("credencial")
+}
+
+// Vínculo muchos-a-muchos: borrar el vínculo nunca borra la credencial ni el proyecto
+model CredencialProyecto {
+  credencialId String     @map("credencial_id")
+  proyectoId   String     @map("proyecto_id")
+  creadoEn     DateTime   @default(now()) @map("creado_en")
+  credencial   Credencial @relation(fields: [credencialId], references: [id], onDelete: Cascade)
+  proyecto     Proyecto   @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@id([credencialId, proyectoId])
+  @@index([proyectoId])
+  @@map("credencial_proyecto")
+}
+
+// Solo registra qué campo cambió y cuándo; nunca guarda valores (ni el secreto anterior ni el nuevo)
+// Persona de contacto global o vinculada a uno o varios proyectos
+model Contacto {
+  id              String             @id @default(cuid())
+  nombre          String
+  correo          String
+  telefono        String?            @map("telefono")
+  empresaOCargo   String?            @map("empresa_o_cargo")
+  nota            String?
+  global          Boolean            @default(false)
+  creadoEn        DateTime           @default(now()) @map("creado_en")
+  actualizadoEn   DateTime           @updatedAt @map("actualizado_en")
+  proyectos       ContactoProyecto[]
+
+  @@index([nombre])
+  @@map("contacto")
+}
+
+// Vinculo muchos-a-muchos: borrar el vinculo nunca borra el contacto ni el proyecto
+model ContactoProyecto {
+  contactoId  String   @map("contacto_id")
+  proyectoId  String   @map("proyecto_id")
+  creadoEn    DateTime @default(now()) @map("creado_en")
+  contacto    Contacto @relation(fields: [contactoId], references: [id], onDelete: Cascade)
+  proyecto    Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@id([contactoId, proyectoId])
+  @@index([proyectoId])
+  @@map("contacto_proyecto")
+}
+
+model HistorialCredencial {
+  id           String     @id @default(cuid())
+  credencialId String     @map("credencial_id")
+  campo        String
+  fecha        DateTime   @default(now())
+  credencial   Credencial @relation(fields: [credencialId], references: [id], onDelete: Cascade)
+
+  @@index([credencialId, fecha])
+  @@map("historial_credencial")
+}
+
+// Notas y bitácora por proyecto (HU-07)
+model Nota {
+  id         String   @id @default(cuid())
+  proyectoId String   @map("proyecto_id")
+  fecha      DateTime
+  texto      String
+  creadoEn   DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@index([proyectoId, fecha])
+  @@map("nota")
+}
+
+// Frecuencia de una tarea (HU-08)
+enum FrecuenciaTarea {
+  DIARIA    @map("diaria")
+  SEMANAL   @map("semanal")
+  MENSUAL   @map("mensual")
+  PUNTUAL   @map("puntual")
+
+  @@map("frecuencia_tarea")
+}
+
+// Tarea con recurrencia configurable; puede asociarse a un proyecto o ser independiente
+model Tarea {
+  id             String         @id @default(cuid())
+  titulo         String
+  descripcion    String?
+  tipoFrecuencia FrecuenciaTarea @map("tipo_frecuencia")
+  diaSemana      Int?           @map("dia_semana")        // 0=domingo a 6=sábado, solo SEMANAL
+  diaMes         Int?           @map("dia_mes")          // 1-31, solo MENSUAL
+  fechaPuntual   DateTime?      @map("fecha_puntual")     // solo PUNTUAL
+  proyectoId     String?        @map("proyecto_id")
+  activa         Boolean        @default(true)
+  creadoEn       DateTime       @default(now()) @map("creado_en")
+  actualizadoEn  DateTime       @updatedAt @map("actualizado_en")
+  proyecto       Proyecto?      @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  completadas    TareaCompletada[]
+
+  @@index([proyectoId, activa])
+  @@map("tarea")
+}
+
+// Una ocurrencia completada; la clave única [tareaId, fecha] impede duplicar el registro del mismo día
+model TareaCompletada {
+  tareaId       String   @map("tarea_id")
+  fecha         DateTime @db.Date                     // día local, sin hora
+  completadoEn  DateTime @default(now()) @map("completado_en")
+  tarea         Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  @@id([tareaId, fecha])
+  @@index([fecha])
+  @@map("tarea_completada")
+}
+
+enum ProveedorCalendario {
+  GOOGLE     @map("google")
+  MICROSOFT  @map("microsoft")
+
+  @@map("proveedor_calendario")
+}
+
+// Cuenta conectada para acceder a un calendario externo; single-user con usuarioId fijo "unico"
+model CuentaCalendario {
+  id              String             @id @default(cuid())
+  proveedor       ProveedorCalendario
+  usuarioId       String             @default("unico") @map("usuario_id")
+  accessTokenCifrado   String?        @map("access_token_cifrado")
+  refreshTokenCifrado  String         @map("refresh_token_cifrado")
+  expiresAt       DateTime?          @map("expires_at")
+  scope           String?
+  syncToken       String?            @map("sync_token")
+  creadoEn        DateTime           @default(now()) @map("creado_en")
+  actualizadoEn   DateTime           @updatedAt @map("actualizado_en")
+  reuniones       Reunion[]
+
+  @@unique([proveedor, usuarioId])
+  @@map("cuenta_calendario")
+}
+
+// Reunión sincronizada desde un calendario externo
+model Reunion {
+  id                  String           @id @default(cuid())
+  proveedor           ProveedorCalendario
+  idExterno           String           @map("id_externo")
+  titulo              String
+  descripcion         String?
+  inicio              DateTime
+  fin                 DateTime
+  enlaceReunion       String?          @map("enlace_reunion")
+  cuentaCalendarioId  String           @map("cuenta_calendario_id")
+  cuentaCalendario    CuentaCalendario @relation(fields: [cuentaCalendarioId], references: [id], onDelete: Cascade)
+  creadoEn            DateTime         @default(now()) @map("creado_en")
+  actualizadoEn       DateTime         @updatedAt @map("actualizado_en")
+
+  @@unique([proveedor, idExterno])
+  @@index([cuentaCalendarioId, inicio])
+  @@map("reunion")
+}
+
+// Tipo de notificación interna
+enum TipoNotificacion {
+  REUNION_PROXIMA @map("reunion_proxima")
+  TAREA_VENCE_HOY @map("tarea_vence_hoy")
+
+  @@map("tipo_notificacion")
+}
+
+// Notificación interna; se descarte por referencia, no por contenido
+model Notificacion {
+  id            String           @id @default(cuid())
+  tipo          TipoNotificacion
+  referenciaId  String           @map("referencia_id")
+  titulo        String
+  mensaje       String
+  fechaEvento  DateTime         @map("fecha_evento")
+  creadoEn     DateTime         @default(now()) @map("creado_en")
+  descartada   NotificacionDescartada?
+
+  @@unique([tipo, referenciaId, fechaEvento])
+  @@map("notificacion")
+}
+
+// Registro de descarte; evita que una notificación reaparezca para el mismo evento
+model NotificacionDescartada {
+  notificacionId String       @map("notificacion_id")
+  descartadaEn  DateTime     @default(now()) @map("descartada_en")
+  notificacion   Notificacion @relation(fields: [notificacionId], references: [id], onDelete: Cascade)
+
+  @@id([notificacionId])
+  @@map("notificacion_descartada")
+}
+
+// Registro de respaldos realizados a Google Drive (HU-15)
+enum EstadoRespaldo {
+  COMPLETADO @map("completado")
+  FALLIDO    @map("fallido")
+}
+
+model Respaldo {
+  id            String         @id @default(cuid())
+  fechaCreacion DateTime       @default(now()) @map("fecha_creacion")
+  nombreArchivo String         @map("nombre_archivo")
+  driveFileId   String?        @map("drive_file_id")
+  tamanoBytes   Int?          @map("tamano_bytes")
+  estado        EstadoRespaldo
+  mensajeError  String?       @map("mensaje_error")
+
+  @@map("respaldo")
+}
