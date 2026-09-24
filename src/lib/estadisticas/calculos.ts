@@ -16,13 +16,11 @@ export function fechaInicioSemana(fecha: Date, zona: string): Date {
     weekday: "short",
   });
   const partes = formatter.formatToParts(fecha);
-  const get = (tipo: string) =>
-    Number(partes.find((p) => p.type === tipo)?.value ?? 1);
+  const get = (tipo: string) => Number(partes.find((p) => p.type === tipo)?.value ?? 1);
   const year = get("year");
   const month = get("month");
   const day = get("day");
-  const diaSemana =
-    partes.find((p) => p.type === "weekday")?.value ?? "";
+  const diaSemana = partes.find((p) => p.type === "weekday")?.value ?? "";
   const numSemana =
     diaSemana === "Sun"
       ? 0
@@ -39,9 +37,7 @@ export function fechaInicioSemana(fecha: Date, zona: string): Date {
                 : 6;
   const diff = numSemana === 0 ? -6 : 1 - numSemana;
   // Usar UTC para que el calculo no dependa de la zona local
-  const result = new Date(
-    Date.UTC(Number(year), Number(month) - 1, Number(day))
-  );
+  const result = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
   result.setUTCDate(result.getUTCDate() + diff);
   return result;
 }
@@ -49,7 +45,7 @@ export function fechaInicioSemana(fecha: Date, zona: string): Date {
 // Agrupar completadas por semana ISO (lunes-domingo)
 export function agruparPorSemana(
   completadas: TareaCompletadaConTarea[],
-  zona: string
+  zona: string,
 ): { semana: string; cantidad: number }[] {
   const mapa = new Map<string, number>();
   for (const c of completadas) {
@@ -66,7 +62,7 @@ export function agruparPorSemana(
 // Agrupar completadas por proyecto
 export function agruparPorProyecto(
   completadas: TareaCompletadaConTarea[],
-  proyectos: Pick<ProyectoModel, "id" | "nombre">[]
+  proyectos: Pick<ProyectoModel, "id" | "nombre">[],
 ): { proyectoId: string | null; nombre: string; cantidad: number }[] {
   const mapa = new Map<string | null, number>();
   for (const c of completadas) {
