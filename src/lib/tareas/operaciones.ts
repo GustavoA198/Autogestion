@@ -152,3 +152,63 @@ export async function estaCompletadaHoy(id: string): Promise<boolean> {
   });
   return count > 0;
 }
+
+export type ResultadoClonacion = {
+  cantidad: number;
+  ids: string[];
+};
+
+// Clona tareas recurrentes de un proyecto origen a uno destino
+// - Lee las tareas de origen y verifica que existan y sean del proyecto origen
+// - Crea nuevas Tarea con los mismos campos excepto id nuevo, proyectoId=destinoId, sin TareaCompletada
+// - La tarea original queda intacta
+export async function clonarTareas(
+  origenId: string,
+  destinoId: string,
+  tareaIds: string[],
+): Promise<ResultadoClonacion> {
+  if (origenId === destinoId) {
+    return { cantidad: 0, ids: [] };
+  }
+
+  const prisma = obtenerPrisma();
+
+  return prisma.$transaction(async (tx) => {
+    // Verifica que las tareas existan y pertenezcan al proyecto origen
+    const tareas = await tx.tarea.findMany({
+      where: {
+        id: { in: tareaIds },
+        proyectoId: origenId,
+        activa: true,
+      },
+    });
+
+    if (tareas.length !== tareaIds.length) {
+      return { cantidad: 0, ids: [] };
+    }
+
+    // Crea las tareas clonadas sin historial de completadas
+    const creadas = await Promise.all(
+      tareas.map((tarea) =>
+        tx.tarea.create({
+          data: {
+            titulo: tarea.titulo,
+            descripcion: tarea.descripcion,
+            tipoFrecuencia: tarea.tipoFrecuencia,
+            diaSemana: tarea.diaSemana,
+            diaMes: tarea.diaMes,
+            fechaPuntual: tarea.fechaPuntual,
+            proyectoId: destinoId,
+            activa: true,
+          },
+          select: { id: true },
+        }),
+      ),
+    );
+
+    return {
+      cantidad: creadas.length,
+      ids: creadas.map((c) => c.id),
+    };
+  });
+}

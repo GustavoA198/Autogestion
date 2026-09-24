@@ -4,6 +4,8 @@ import { Insignia } from "@/componentes/insignia";
 import { listarTareasDeProyecto } from "@/lib/tareas/operaciones";
 import { leerEntornoTiempo } from "@/lib/tareas/tiempo";
 import { correspondeHoy } from "@/lib/tareas/recurrencia";
+import { listarProyectos } from "@/lib/proyectos/operaciones";
+import { ClonarTareas } from "./clonar-tareas";
 
 const FRECUENCIA_LABEL: Record<string, string> = {
   DIARIA: "Diaria",
@@ -40,7 +42,10 @@ function frecuenciaDetalle(tarea: {
 }
 
 export async function SeccionTareas({ proyectoId }: { proyectoId: string }) {
-  const tareas = await listarTareasDeProyecto(proyectoId);
+  const [tareas, proyectos] = await Promise.all([
+    listarTareasDeProyecto(proyectoId),
+    listarProyectos(),
+  ]);
   const { TZ } = leerEntornoTiempo();
   const ahora = new Date();
 
@@ -61,9 +66,12 @@ export async function SeccionTareas({ proyectoId }: { proyectoId: string }) {
     <Tarjeta
       titulo="Tareas"
       accion={
-        <Link href="/tareas/nueva" className="btn btn-outline btn-sm">
-          Nueva
-        </Link>
+        <>
+          <ClonarTareas proyectoId={proyectoId} proyectos={proyectos} tareas={tareas} />
+          <Link href="/tareas/nueva" className="btn btn-outline btn-sm">
+            Nueva
+          </Link>
+        </>
       }
     >
       {tareas.length === 0 ? (
