@@ -1,11 +1,16 @@
 import { expect, test, type Page } from "@playwright/test";
-import { CLAVE_E2E, USUARIO_E2E } from "./soporte";
+import { CLAVE_E2E, USUARIO_E2E, ipAleatoria } from "./soporte";
 
 async function iniciarSesion(page: Page, usuario: string, clave: string) {
   await page.getByLabel("Usuario").fill(usuario);
   await page.getByLabel("Contraseña").fill(clave);
   await page.getByRole("button", { name: "Entrar" }).click();
 }
+
+// Cada prueba usa su propia IP simulada para no compartir contador del limitador
+test.beforeEach(async ({ page }) => {
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": ipAleatoria() });
+});
 
 test.describe("rutas protegidas", () => {
   test("redirige al inicio de sesión conservando la ruta pedida", async ({ page }) => {
@@ -38,22 +43,7 @@ test.describe("inicio y cierre de sesión", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("permite entrar, mantiene la sesión al recargar y cierra la sesión", async ({ page }) => {
-    await page.goto("/login");
-    await iniciarSesion(page, USUARIO_E2E, CLAVE_E2E);
-    await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
-
-    await page.reload();
-    await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
-
-    await page.getByRole("button", { name: "Cerrar sesión" }).click();
-    await expect(page).toHaveURL(/\/login/);
-
-    await page.goto("/");
-    await expect(page).toHaveURL(/\/login/);
-  });
-
-  test("la cookie de sesión no es accesible desde JavaScript", async ({ page, context }) => {
+  test("entra, protege la cookie, mantiene la sesión y la cierra", async ({ page, context }) => {
     await page.goto("/login");
     await iniciarSesion(page, USUARIO_E2E, CLAVE_E2E);
     await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
@@ -64,29 +54,28 @@ test.describe("inicio y cierre de sesión", () => {
     expect(cookie?.httpOnly).toBe(true);
     expect(cookie?.sameSite).toBe("Lax");
     expect(await page.evaluate(() => document.cookie)).not.toContain("session-token");
-  });
 
-  test("ignora un destino externo y entra a la raíz", async ({ page }) => {
-    await page.goto("/login?callbackUrl=https%3A%2F%2Fsitio-malicioso.com");
-    await iniciarSesion(page, USUARIO_E2E, CLAVE_E2E);
-    await expect(page).toHaveURL("/");
-  });
-
-  test("una sesión activa no vuelve a mostrar el formulario", async ({ page }) => {
-    await page.goto("/login");
-    await iniciarSesion(page, USUARIO_E2E, CLAVE_E2E);
+    await page.reload();
     await expect(page.getByRole("button", { name: "Cerrar sesión" })).toBeVisible();
 
     await page.goto("/login");
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL(/\/dashboard$/);
+
+    await page.getByRole("button", { name: "Cerrar sesión" }).click();
+    await expect(page).toHaveURL(/\/login/);
+
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("ignora un destino externo y entra al panel", async ({ page }) => {
+    await page.goto("/login?callbackUrl=https%3A%2F%2Fsitio-malicioso.com");
+    await iniciarSesion(page, USUARIO_E2E, CLAVE_E2E);
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 });
 
 test.describe("limitación de intentos", () => {
-  // IP simulada distinta en cada ejecución para no dejar bloqueada la IP real de las demás pruebas
-  const ip = `198.51.100.${Math.floor(Math.random() * 250) + 1}`;
-  test.use({ extraHTTPHeaders: { "x-forwarded-for": ip } });
-
   test("bloquea tras superar el máximo de intentos, incluso con la clave correcta", async ({
     page,
   }) => {

@@ -57,6 +57,10 @@ Con la base de datos de Docker en marcha (`docker compose up -d db`):
 npm run dev
 ```
 
+## Diseño
+
+Los tokens de diseño (color, tipografía, radios, sombras y foco) viven en `src/app/globals.css`, en el tema de DaisyUI `autogestion-dark-lime` y el bloque `@theme` de Tailwind. Los componentes usan solo clases semánticas (`bg-base-200`, `text-primary`), sin colores sueltos. Los componentes base están en `src/componentes`.
+
 ## Comandos
 
 | Comando                   | Descripción                                              |

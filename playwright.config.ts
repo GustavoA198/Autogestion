@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { HASH_E2E, USUARIO_E2E } from "./e2e/soporte";
+import { ARCHIVO_SESION, HASH_E2E, USUARIO_E2E } from "./e2e/soporte";
 
 const PUERTO = 3100;
 const URL_BASE = `http://127.0.0.1:${PUERTO}`;
@@ -14,7 +14,21 @@ export default defineConfig({
     baseURL: URL_BASE,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "preparacion", testMatch: /.*\.setup\.ts/ },
+    {
+      name: "chromium",
+      testIgnore: /shell\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      // Reutiliza la sesión guardada para no gastar intentos del limitador en cada prueba
+      name: "chromium-con-sesion",
+      testMatch: /shell\.spec\.ts/,
+      dependencies: ["preparacion"],
+      use: { ...devices["Desktop Chrome"], storageState: ARCHIVO_SESION },
+    },
+  ],
   webServer: {
     // Puerto distinto del de Docker para no chocar con la aplicación en ejecución
     command: `npm run dev -- --port ${PUERTO} --hostname 127.0.0.1`,
