@@ -26,6 +26,7 @@ model Proyecto {
   creadoEn            DateTime             @default(now()) @map("creado_en")
   actualizadoEn       DateTime             @updatedAt @map("actualizado_en")
   credenciales        CredencialProyecto[]
+  contactos           ContactoProyecto[]
 
   @@map("proyecto")
 }
@@ -73,6 +74,36 @@ model CredencialProyecto {
 }
 
 // Solo registra qué campo cambió y cuándo; nunca guarda valores (ni el secreto anterior ni el nuevo)
+// Persona de contacto global o vinculada a uno o varios proyectos
+model Contacto {
+  id              String             @id @default(cuid())
+  nombre          String
+  correo          String
+  telefono        String?            @map("telefono")
+  empresaOCargo   String?            @map("empresa_o_cargo")
+  nota            String?
+  global          Boolean            @default(false)
+  creadoEn        DateTime           @default(now()) @map("creado_en")
+  actualizadoEn   DateTime           @updatedAt @map("actualizado_en")
+  proyectos       ContactoProyecto[]
+
+  @@index([nombre])
+  @@map("contacto")
+}
+
+// Vinculo muchos-a-muchos: borrar el vinculo nunca borra el contacto ni el proyecto
+model ContactoProyecto {
+  contactoId  String   @map("contacto_id")
+  proyectoId  String   @map("proyecto_id")
+  creadoEn    DateTime @default(now()) @map("creado_en")
+  contacto    Contacto @relation(fields: [contactoId], references: [id], onDelete: Cascade)
+  proyecto    Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@id([contactoId, proyectoId])
+  @@index([proyectoId])
+  @@map("contacto_proyecto")
+}
+
 model HistorialCredencial {
   id           String     @id @default(cuid())
   credencialId String     @map("credencial_id")
