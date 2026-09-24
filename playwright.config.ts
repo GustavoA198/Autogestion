@@ -18,19 +18,19 @@ export default defineConfig({
     { name: "preparacion", testMatch: /.*\.setup\.ts/ },
     {
       name: "chromium",
-      testIgnore: /shell\.spec\.ts/,
+      testIgnore: /(shell|proyectos)\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
     {
-      // Reutiliza la sesión guardada para no gastar intentos del limitador en cada prueba
+      // Reutiliza la sesiÃ³n guardada para no gastar intentos del limitador en cada prueba
       name: "chromium-con-sesion",
-      testMatch: /shell\.spec\.ts/,
+      testMatch: /(shell|proyectos)\.spec\.ts/,
       dependencies: ["preparacion"],
       use: { ...devices["Desktop Chrome"], storageState: ARCHIVO_SESION },
     },
   ],
   webServer: {
-    // Puerto distinto del de Docker para no chocar con la aplicación en ejecución
+    // Puerto distinto del de Docker para no chocar con la aplicaciÃ³n en ejecuciÃ³n
     command: `npm run dev -- --port ${PUERTO} --hostname 127.0.0.1`,
     url: `${URL_BASE}/api/health`,
     reuseExistingServer: !process.env.CI,
