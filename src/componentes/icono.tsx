@@ -10,7 +10,8 @@ export type NombreIcono =
   | "libreta"
   | "cerrar-sesion"
   | "menu"
-  | "cerrar";
+  | "cerrar"
+  | "grafica";
 
 const ICONOS: Record<NombreIcono, ReactElement> = {
   panel: (
@@ -83,6 +84,12 @@ const ICONOS: Record<NombreIcono, ReactElement> = {
   cerrar: (
     <>
       <path d="M6 6l12 12M18 6L6 18" />
+    </>
+  ),
+  grafica: (
+    <>
+      <path d="M3 3v18h18" />
+      <path d="M7 16l4-4 4 4 5-6" />
     </>
   ),
 };

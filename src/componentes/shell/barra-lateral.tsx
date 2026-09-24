@@ -16,6 +16,7 @@ export const SECCIONES_PRINCIPALES: EnlaceSeccion[] = [
   { ruta: "/calendario", etiqueta: "Calendario", icono: "calendario" },
   { ruta: "/tareas", etiqueta: "Tareas", icono: "lista" },
   { ruta: "/notas", etiqueta: "Notas / Bitácora", icono: "libreta" },
+  { ruta: "/estadisticas", etiqueta: "Estadísticas", icono: "grafica" },
 ];
 
 export function BarraLateral() {
