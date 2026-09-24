@@ -1,15 +1,18 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { Boton } from "@/componentes/boton";
+import { Icono } from "@/componentes/icono";
 
 export function BotonCerrarSesion() {
   return (
-    <button
-      type="button"
+    <Boton
+      variante="secundario"
+      tamano="pequeno"
       onClick={() => signOut({ callbackUrl: "/login" })}
-      className="rounded border border-zinc-400 px-3 py-1.5 text-sm"
     >
+      <Icono nombre="cerrar-sesion" tamano={16} />
       Cerrar sesión
-    </button>
+    </Boton>
   );
 }

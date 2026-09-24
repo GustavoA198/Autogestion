@@ -12,9 +12,12 @@ export default async function PaginaLogin({ searchParams }: PageProps<"/login">)
   if (await obtenerSesion()) redirect(destino);
 
   return (
-    <main className="flex flex-1 items-center justify-center p-6">
+    <main className="bg-base-100 text-base-content flex min-h-screen items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-6">
-        <h1 className="text-2xl font-semibold">Autogestión</h1>
+        <div className="space-y-1 text-center">
+          <h1 className="text-2xl font-semibold">Autogestión</h1>
+          <p className="text-sm opacity-70">Centro de mando personal</p>
+        </div>
         <FormularioLogin destino={destino} />
       </div>
     </main>

@@ -3,6 +3,8 @@
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { Boton } from "@/componentes/boton";
+import { Entrada } from "@/componentes/entrada";
 
 const MENSAJES: Record<string, string> = {
   AccesoBloqueado: "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
@@ -11,7 +13,7 @@ const MENSAJE_GENERICO = "Usuario o contraseña incorrectos.";
 
 const sinSuscripcion = () => () => {};
 
-// Falso en el servidor y verdadero en el cliente: indica que el formulario ya es interactivo
+// Falso en el servidor y verdadero en el cliente: el formulario ya es interactivo
 function useHidratado() {
   return useSyncExternalStore(
     sinSuscripcion,
@@ -50,44 +52,36 @@ export function FormularioLogin({ destino }: { destino: string }) {
 
   return (
     <form method="post" onSubmit={alEnviar} className="space-y-4" noValidate>
-      <div className="space-y-1">
-        <label htmlFor="usuario" className="text-sm font-medium">
-          Usuario
-        </label>
-        <input
-          id="usuario"
-          name="usuario"
-          type="text"
-          autoComplete="username"
-          required
-          className="w-full rounded border border-zinc-400 px-3 py-2"
-        />
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="clave" className="text-sm font-medium">
-          Contraseña
-        </label>
-        <input
-          id="clave"
-          name="clave"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="w-full rounded border border-zinc-400 px-3 py-2"
-        />
-      </div>
-      {error && (
-        <p role="alert" className="text-sm text-red-700">
+      <Entrada
+        etiqueta="Usuario"
+        name="usuario"
+        autoComplete="username"
+        required
+        invalido={Boolean(error)}
+      />
+      <Entrada
+        etiqueta="Contraseña"
+        name="clave"
+        type="password"
+        autoComplete="current-password"
+        required
+        invalido={Boolean(error)}
+      />
+      {error ? (
+        <p role="alert" className="alert alert-error text-sm">
           {error}
         </p>
-      )}
-      <button
+      ) : null}
+      <Boton
         type="submit"
+        variante="primario"
+        tamano="grande"
         disabled={!hidratado || enviando}
-        className="w-full rounded bg-zinc-900 px-3 py-2 font-medium text-white disabled:opacity-60"
+        cargando={enviando}
+        className="w-full"
       >
         {enviando ? "Verificando…" : "Entrar"}
-      </button>
+      </Boton>
     </form>
   );
 }
