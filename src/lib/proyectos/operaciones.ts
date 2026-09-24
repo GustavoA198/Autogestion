@@ -45,8 +45,17 @@ export async function actualizarProyecto(
   }
 }
 
-// HU-05 y HU-06 desvincularán aquí lo compartido (muchos-a-muchos) antes de borrar; por ahora solo existe el proyecto
+// Borra las credenciales exclusivas del proyecto; las compartidas o globales solo se desvinculan por cascada
 export async function eliminarProyecto(id: string): Promise<boolean> {
-  const { count } = await obtenerPrisma().proyecto.deleteMany({ where: { id } });
-  return count > 0;
+  return obtenerPrisma().$transaction(async (tx) => {
+    await tx.credencial.deleteMany({
+      where: {
+        global: false,
+        proyectos: { some: { proyectoId: id } },
+        NOT: { proyectos: { some: { proyectoId: { not: id } } } },
+      },
+    });
+    const { count } = await tx.proyecto.deleteMany({ where: { id } });
+    return count > 0;
+  });
 }
