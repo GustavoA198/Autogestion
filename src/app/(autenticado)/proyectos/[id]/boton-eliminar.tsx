@@ -7,31 +7,46 @@ import { accionEliminarProyecto } from "../acciones";
 
 type Resumen = { exclusivas: string[]; desvinculadas: string[] };
 
-// Advierte de forma explícita qué credenciales se borran y cuáles solo se desvinculan
-function mensajeEliminacion(nombre: string, { exclusivas, desvinculadas }: Resumen): string {
-  const partes = [`Se eliminará "${nombre}".`];
-  if (exclusivas.length > 0) {
+function mensajeEliminacion(
+  nombre: string,
+  resumenCredenciales: Resumen,
+  resumenContactos: Resumen,
+): string {
+  const partes = [`Se eliminara "${nombre}".`];
+  if (resumenCredenciales.exclusivas.length > 0) {
     partes.push(
-      `Credenciales exclusivas que se borrarán (${exclusivas.length}): ${exclusivas.join(", ")}.`,
+      `Credenciales exclusivas que se borraran (${resumenCredenciales.exclusivas.length}): ${resumenCredenciales.exclusivas.join(", ")}.`,
     );
   }
-  if (desvinculadas.length > 0) {
+  if (resumenCredenciales.desvinculadas.length > 0) {
     partes.push(
-      `Credenciales compartidas o globales que solo se desvincularán y se conservan (${desvinculadas.length}): ${desvinculadas.join(", ")}.`,
+      `Credenciales compartidas o globales que solo se desvinculan (${resumenCredenciales.desvinculadas.length}): ${resumenCredenciales.desvinculadas.join(", ")}.`,
     );
   }
-  partes.push("Esta acción no se puede deshacer.");
+  if (resumenContactos.exclusivas.length > 0) {
+    partes.push(
+      `Contactos exclusivos que se borraran (${resumenContactos.exclusivas.length}): ${resumenContactos.exclusivas.join(", ")}.`,
+    );
+  }
+  if (resumenContactos.desvinculadas.length > 0) {
+    partes.push(
+      `Contactos compartidos o globales que solo se desvinculan (${resumenContactos.desvinculadas.length}): ${resumenContactos.desvinculadas.join(", ")}.`,
+    );
+  }
+  partes.push("Esta accion no se puede deshacer.");
   return partes.join(" ");
 }
 
 export function BotonEliminar({
   id,
   nombre,
-  resumen,
+  resumenCredenciales,
+  resumenContactos,
 }: {
   id: string;
   nombre: string;
-  resumen: Resumen;
+  resumenCredenciales: Resumen;
+  resumenContactos: Resumen;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [pendiente, iniciar] = useTransition();
@@ -46,7 +61,7 @@ export function BotonEliminar({
         alCancelar={() => setAbierto(false)}
         alConfirmar={() => iniciar(() => accionEliminarProyecto(id))}
         titulo="Eliminar proyecto"
-        mensaje={mensajeEliminacion(nombre, resumen)}
+        mensaje={mensajeEliminacion(nombre, resumenCredenciales, resumenContactos)}
         textoConfirmar="Eliminar proyecto"
         cargando={pendiente}
         destructivo
