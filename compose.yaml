@@ -37,6 +37,10 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      AUTH_USUARIO: ${AUTH_USUARIO:?Ejecuta npm run auth:configurar}
+      AUTH_CLAVE_HASH: ${AUTH_CLAVE_HASH:?Ejecuta npm run auth:configurar}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?Ejecuta npm run auth:configurar}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?Ejecuta npm run auth:configurar}
     depends_on:
       db:
         condition: service_healthy
