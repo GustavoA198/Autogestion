@@ -13,8 +13,7 @@ import type { EventoCalendario } from "@/lib/calendario/proveedor";
 import type { TareaCompletadaConTarea } from "@/lib/estadisticas/calculos";
 
 export type ResultadoReuniones =
-  | { ok: true; reuniones: EventoCalendario[] }
-  | { ok: false; error: string };
+  { ok: true; reuniones: EventoCalendario[] } | { ok: false; error: string };
 
 export async function cargarReunionesHoy(): Promise<ResultadoReuniones> {
   try {
@@ -39,8 +38,7 @@ export async function cargarReunionesHoy(): Promise<ResultadoReuniones> {
 export type TareaDelDia = TareaUI & { esRecurrente: boolean };
 
 export type ResultadoTareas =
-  | { ok: true; recurrentes: TareaDelDia[]; puntuales: TareaDelDia[] }
-  | { ok: false; error: string };
+  { ok: true; recurrentes: TareaDelDia[]; puntuales: TareaDelDia[] } | { ok: false; error: string };
 
 export async function cargarTareasDelDia(): Promise<ResultadoTareas> {
   try {
@@ -49,12 +47,20 @@ export async function cargarTareasDelDia(): Promise<ResultadoTareas> {
     const tareas = await listarTareas();
     const delDia = tareas.filter((t) =>
       correspondeHoy(
-        { tipoFrecuencia: t.tipoFrecuencia, diaSemana: t.diaSemana, diaMes: t.diaMes, fechaPuntual: t.fechaPuntual },
+        {
+          tipoFrecuencia: t.tipoFrecuencia,
+          diaSemana: t.diaSemana,
+          diaMes: t.diaMes,
+          fechaPuntual: t.fechaPuntual,
+        },
         hoy,
-        TZ
-      )
+        TZ,
+      ),
     );
-    const mapper = (t: TareaUI): TareaDelDia => ({ ...t, esRecurrente: t.tipoFrecuencia !== "PUNTUAL" });
+    const mapper = (t: TareaUI): TareaDelDia => ({
+      ...t,
+      esRecurrente: t.tipoFrecuencia !== "PUNTUAL",
+    });
     const recurrentes = delDia.filter((t) => t.tipoFrecuencia !== "PUNTUAL").map(mapper);
     const puntuales = delDia.filter((t) => t.tipoFrecuencia === "PUNTUAL").map(mapper);
     return { ok: true, recurrentes, puntuales };
@@ -66,15 +72,16 @@ export async function cargarTareasDelDia(): Promise<ResultadoTareas> {
 const MAX_PROYECTOS_ACCESOS = 6;
 
 export type ResultadoProyectos =
-  | { ok: true; proyectos: { id: string; nombre: string }[] }
-  | { ok: false; error: string };
+  { ok: true; proyectos: { id: string; nombre: string }[] } | { ok: false; error: string };
 
 export async function cargarProyectosAccesos(): Promise<ResultadoProyectos> {
   try {
     const proyectos = await listarProyectos();
     return {
       ok: true,
-      proyectos: proyectos.slice(0, MAX_PROYECTOS_ACCESOS).map((p) => ({ id: p.id, nombre: p.nombre })),
+      proyectos: proyectos
+        .slice(0, MAX_PROYECTOS_ACCESOS)
+        .map((p) => ({ id: p.id, nombre: p.nombre })),
     };
   } catch {
     return { ok: false, error: "No se pudieron cargar los proyectos." };
@@ -101,7 +108,10 @@ export async function cargarEstadisticas(): Promise<ResultadoEstadisticas> {
         include: { tarea: { select: { proyectoId: true } } },
         orderBy: { fecha: "asc" },
       }),
-      obtenerPrisma().proyecto.findMany({ select: { id: true, nombre: true }, orderBy: { nombre: "asc" } }),
+      obtenerPrisma().proyecto.findMany({
+        select: { id: true, nombre: true },
+        orderBy: { nombre: "asc" },
+      }),
     ]);
     const datosSemana = agruparPorSemana(completadas as TareaCompletadaConTarea[], TZ);
     const datosProyecto = agruparPorProyecto(completadas as TareaCompletadaConTarea[], proyectos);

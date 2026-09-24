@@ -80,6 +80,16 @@ const esquemaCalendario = z.object({
     .string()
     .optional()
     .transform((v) => v ?? "http://localhost:3100/api/calendario/google/callback"),
+  MICROSOFT_CLIENT_ID: z.string().optional(),
+  MICROSOFT_CLIENT_SECRET: z.string().optional(),
+  MICROSOFT_TENANT_ID: z
+    .string()
+    .optional()
+    .transform((v) => v ?? "common"),
+  MICROSOFT_REDIRECT_URI: z
+    .string()
+    .optional()
+    .transform((v) => v ?? "http://localhost:3100/api/calendario/microsoft/callback"),
 });
 
 export type EntornoCalendario = z.infer<typeof esquemaCalendario>;

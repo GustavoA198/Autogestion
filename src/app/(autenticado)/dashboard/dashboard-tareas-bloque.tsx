@@ -77,10 +77,13 @@ export function BloqueTareas({ recurrentes, puntuales }: Props) {
     >
       {hayRecurrentes && (
         <section aria-labelledby="tareas-recurrentes-heading">
-          <h3 id="tareas-recurrentes-heading" className="text-xs font-semibold text-base-content/60 uppercase mb-2">
+          <h3
+            id="tareas-recurrentes-heading"
+            className="text-base-content/60 mb-2 text-xs font-semibold uppercase"
+          >
             Fijas
           </h3>
-          <ul className="space-y-1 divide-y divide-base-300">
+          <ul className="divide-base-300 space-y-1 divide-y">
             {recurrentes.map((t) => (
               <TareaFila key={t.id} tarea={t} />
             ))}
@@ -88,11 +91,17 @@ export function BloqueTareas({ recurrentes, puntuales }: Props) {
         </section>
       )}
       {hayPuntuales && (
-        <section aria-labelledby="tareas-puntuales-heading" className={hayRecurrentes ? "mt-4" : ""}>
-          <h3 id="tareas-puntuales-heading" className="text-xs font-semibold text-base-content/60 uppercase mb-2">
+        <section
+          aria-labelledby="tareas-puntuales-heading"
+          className={hayRecurrentes ? "mt-4" : ""}
+        >
+          <h3
+            id="tareas-puntuales-heading"
+            className="text-base-content/60 mb-2 text-xs font-semibold uppercase"
+          >
             Puntuales
           </h3>
-          <ul className="space-y-1 divide-y divide-base-300">
+          <ul className="divide-base-300 space-y-1 divide-y">
             {puntuales.map((t) => (
               <TareaFila key={t.id} tarea={t} />
             ))}

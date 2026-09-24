@@ -1,7 +1,13 @@
 // Unit tests para los cargadores de datos del dashboard.
 // Cada test mockea Prisma para aislar la logica de la base de datos.
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { cargarReunionesHoy, cargarTareasDelDia, cargarProyectosAccesos, cargarEstadisticas, cargarNotificaciones } from "./dashboard-data";
+import {
+  cargarReunionesHoy,
+  cargarTareasDelDia,
+  cargarProyectosAccesos,
+  cargarEstadisticas,
+  cargarNotificaciones,
+} from "./dashboard-data";
 
 const prismaMock = {
   reunion: { findMany: vi.fn() },
@@ -29,7 +35,14 @@ describe("dashboard-data", () => {
       const inicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 9, 0);
       const fin = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 10, 0);
       prismaMock.reunion.findMany.mockResolvedValue([
-        { idExterno: "evt-1", titulo: "Daily standup", descripcion: null, inicio, fin, enlaceReunion: "https://meet.example.com/123" },
+        {
+          idExterno: "evt-1",
+          titulo: "Daily standup",
+          descripcion: null,
+          inicio,
+          fin,
+          enlaceReunion: "https://meet.example.com/123",
+        },
       ]);
 
       const res = await cargarReunionesHoy();
@@ -60,9 +73,48 @@ describe("dashboard-data", () => {
   describe("cargarTareasDelDia", () => {
     it("separa recurrentes y puntuales", async () => {
       prismaMock.tarea.findMany.mockResolvedValue([
-        { id: "t-1", titulo: "Tarea diaria", tipoFrecuencia: "DIARIA", diaSemana: null, diaMes: null, fechaPuntual: null, proyectoId: null, activa: true, descripcion: null, createdAt: new Date(), updatedAt: new Date(), proyecto: null },
-        { id: "t-2", titulo: "Tarea semanal", tipoFrecuencia: "SEMANAL", diaSemana: 1, diaMes: null, fechaPuntual: null, proyectoId: null, activa: true, descripcion: null, createdAt: new Date(), updatedAt: new Date(), proyecto: null },
-        { id: "t-3", titulo: "Tarea puntual", tipoFrecuencia: "PUNTUAL", diaSemana: null, diaMes: null, fechaPuntual: new Date(), proyectoId: null, activa: true, descripcion: null, createdAt: new Date(), updatedAt: new Date(), proyecto: null },
+        {
+          id: "t-1",
+          titulo: "Tarea diaria",
+          tipoFrecuencia: "DIARIA",
+          diaSemana: null,
+          diaMes: null,
+          fechaPuntual: null,
+          proyectoId: null,
+          activa: true,
+          descripcion: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          proyecto: null,
+        },
+        {
+          id: "t-2",
+          titulo: "Tarea semanal",
+          tipoFrecuencia: "SEMANAL",
+          diaSemana: 1,
+          diaMes: null,
+          fechaPuntual: null,
+          proyectoId: null,
+          activa: true,
+          descripcion: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          proyecto: null,
+        },
+        {
+          id: "t-3",
+          titulo: "Tarea puntual",
+          tipoFrecuencia: "PUNTUAL",
+          diaSemana: null,
+          diaMes: null,
+          fechaPuntual: new Date(),
+          proyectoId: null,
+          activa: true,
+          descripcion: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          proyecto: null,
+        },
       ]);
       const res = await cargarTareasDelDia();
 
@@ -84,7 +136,12 @@ describe("dashboard-data", () => {
   describe("cargarProyectosAccesos", () => {
     it("devuelve hasta MAX_PROYECTOS_ACCESOS proyectos", async () => {
       const proyectos = Array.from({ length: 8 }, (_, i) => ({
-        id: `p-${i + 1}`, nombre: `Proyecto ${i + 1}`, createdAt: new Date(), updatedAt: new Date(), urlDocumentacion: null, activo: true,
+        id: `p-${i + 1}`,
+        nombre: `Proyecto ${i + 1}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        urlDocumentacion: null,
+        activo: true,
       }));
       prismaMock.proyecto.findMany.mockResolvedValue(proyectos);
 
