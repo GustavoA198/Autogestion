@@ -16,7 +16,7 @@ export function GraficaBarras({ datos, altoMaximo = 200 }: Props) {
 
   return (
     <div className="overflow-x-auto" role="group" aria-label="Gráfico de barras">
-      <table className="table table-sm w-full">
+      <table className="table-sm table w-full">
         <caption className="sr-only">Cantidad de tareas completadas por período</caption>
         <thead>
           <tr>
@@ -32,7 +32,7 @@ export function GraficaBarras({ datos, altoMaximo = 200 }: Props) {
             {datos.map((d) => {
               const alturaPx = Math.round((d.cantidad / maximo) * altoMaximo);
               return (
-                <td key={d.etiqueta} className="align-end text-center p-1">
+                <td key={d.etiqueta} className="align-end p-1 text-center">
                   <button
                     type="button"
                     aria-label={d.ariaLabel}

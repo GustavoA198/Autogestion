@@ -23,12 +23,7 @@ function formatearSemana(fechaStr: string): string {
   }).format(fecha);
 }
 
-export function ResumenEstadisticas({
-  datosSemana,
-  datosProyecto,
-  total,
-  periodoSemanas,
-}: Props) {
+export function ResumenEstadisticas({ datosSemana, datosProyecto, total, periodoSemanas }: Props) {
   const barrasSemana = datosSemana.map((d) => ({
     etiqueta: formatearSemana(d.semana),
     cantidad: d.cantidad,
@@ -55,20 +50,14 @@ export function ResumenEstadisticas({
         />
         <TarjetaKpi
           etiqueta="Promedio semanal"
-          valor={
-            datosSemana.length > 0
-              ? (total / datosSemana.length).toFixed(1)
-              : "0"
-          }
+          valor={datosSemana.length > 0 ? (total / datosSemana.length).toFixed(1) : "0"}
           icono="panel"
           tonoDetalle="neutral"
         />
         <TarjetaKpi
           etiqueta="Mejor semana"
           valor={
-            datosSemana.length > 0
-              ? String(Math.max(...datosSemana.map((d) => d.cantidad)))
-              : "0"
+            datosSemana.length > 0 ? String(Math.max(...datosSemana.map((d) => d.cantidad))) : "0"
           }
           icono="panel"
           tonoDetalle="success"
