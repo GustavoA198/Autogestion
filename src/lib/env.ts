@@ -39,3 +39,19 @@ export function leerEntornoBaseDatos(fuente: Fuente = process.env): EntornoBaseD
 export function leerEntornoAuth(fuente: Fuente = process.env): EntornoAuth {
   return validar(esquemaAuth, fuente);
 }
+
+const LARGO_CLAVE_CIFRADO = 32;
+
+const esquemaCifrado = z.object({
+  CLAVE_CIFRADO: z
+    .string()
+    .regex(/^[A-Za-z0-9+/]+={0,2}$/, "debe estar en base64")
+    .transform((valor) => Buffer.from(valor, "base64"))
+    .refine((clave) => clave.length === LARGO_CLAVE_CIFRADO, "debe decodificar a 32 bytes"),
+});
+
+export type EntornoCifrado = z.infer<typeof esquemaCifrado>;
+
+export function leerEntornoCifrado(fuente: Fuente = process.env): EntornoCifrado {
+  return validar(esquemaCifrado, fuente);
+}

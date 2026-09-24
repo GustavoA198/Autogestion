@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { leerEntornoAuth, leerEntornoBaseDatos } from "@/lib/env";
+import { leerEntornoAuth, leerEntornoBaseDatos, leerEntornoCifrado } from "@/lib/env";
 
 const AUTH_VALIDO = {
   AUTH_USUARIO: "gustavo",
@@ -60,4 +60,24 @@ describe("leerEntornoAuth", () => {
       leerEntornoAuth({ ...AUTH_VALIDO, AUTH_CLAVE_HASH: "clave-en-texto-plano" }),
     ).toThrow(expect.objectContaining({ message: expect.not.stringContaining("texto-plano") }));
   });
+});
+
+describe("leerEntornoCifrado", () => {
+  const clave = Buffer.alloc(32, 7).toString("base64");
+
+  it("decodifica una clave base64 de 32 bytes", () => {
+    expect(leerEntornoCifrado({ CLAVE_CIFRADO: clave }).CLAVE_CIFRADO).toHaveLength(32);
+  });
+
+  it.each([undefined, "", "no es base64!", Buffer.alloc(16).toString("base64")])(
+    "rechaza la clave %j sin revelar su valor",
+    (valor) => {
+      const accion = () => leerEntornoCifrado({ CLAVE_CIFRADO: valor });
+      expect(accion).toThrow(/CLAVE_CIFRADO/);
+      if (valor)
+        expect(accion).toThrow(
+          expect.objectContaining({ message: expect.not.stringContaining(valor) }),
+        );
+    },
+  );
 });

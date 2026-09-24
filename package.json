@@ -20,7 +20,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
-    "auth:configurar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/configurar-acceso.mts"
+    "auth:configurar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/configurar-acceso.mts",
+    "cifrado:configurar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/configurar-cifrado.mts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",

@@ -41,6 +41,7 @@ services:
       AUTH_CLAVE_HASH: ${AUTH_CLAVE_HASH:?Ejecuta npm run auth:configurar}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?Ejecuta npm run auth:configurar}
       NEXTAUTH_URL: ${NEXTAUTH_URL:?Ejecuta npm run auth:configurar}
+      CLAVE_CIFRADO: ${CLAVE_CIFRADO:?Ejecuta npm run cifrado:configurar}
     depends_on:
       db:
         condition: service_healthy
