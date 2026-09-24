@@ -18,13 +18,13 @@ export default defineConfig({
     { name: "preparacion", testMatch: /.*\.setup\.ts/ },
     {
       name: "chromium",
-      testIgnore: /(shell|proyectos)\.spec\.ts/,
+      testIgnore: /(shell|proyectos|credenciales)\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
     {
       // Reutiliza la sesiÃ³n guardada para no gastar intentos del limitador en cada prueba
       name: "chromium-con-sesion",
-      testMatch: /(shell|proyectos)\.spec\.ts/,
+      testMatch: /(shell|proyectos|credenciales)\.spec\.ts/,
       dependencies: ["preparacion"],
       use: { ...devices["Desktop Chrome"], storageState: ARCHIVO_SESION },
     },
