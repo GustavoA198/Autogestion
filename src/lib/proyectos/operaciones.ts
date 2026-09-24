@@ -45,10 +45,17 @@ export async function actualizarProyecto(
   }
 }
 
-// Borra las credenciales exclusivas del proyecto; las compartidas o globales solo se desvinculan por cascada
+// Borra las credenciales y contactos exclusivos del proyecto; lo demas solo se desvincula por cascada
 export async function eliminarProyecto(id: string): Promise<boolean> {
   return obtenerPrisma().$transaction(async (tx) => {
     await tx.credencial.deleteMany({
+      where: {
+        global: false,
+        proyectos: { some: { proyectoId: id } },
+        NOT: { proyectos: { some: { proyectoId: { not: id } } } },
+      },
+    });
+    await tx.contacto.deleteMany({
       where: {
         global: false,
         proyectos: { some: { proyectoId: id } },
