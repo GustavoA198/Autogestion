@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { exigirSesion } from "@/lib/auth/sesion";
 import { obtenerGoogleProveedor } from "@/lib/calendario/google/proveedor-google";
+import { obtenerMicrosoftProveedor } from "@/lib/calendario/microsoft/proveedor-microsoft";
 import {
   cuentaEstaConectada,
   desconectarCalendario,
@@ -11,7 +12,7 @@ import {
   obtenerCuentaCalendario,
   sincronizarReuniones,
 } from "@/lib/calendario/operaciones";
-import type { ErrorCalendario } from "@/lib/calendario/proveedor";
+import type { ErrorCalendario, ProveedorCalendario } from "@/lib/calendario/proveedor";
 import { ErrorCalendario as ErrorCalendarioBase } from "@/lib/calendario/proveedor";
 
 export type EstadoReunion = {
@@ -25,16 +26,24 @@ function leerCampos(formulario: FormData) {
     descripcion: formulario.get("descripcion"),
     inicio: formulario.get("inicio"),
     fin: formulario.get("fin"),
+    proveedor: formulario.get("proveedor"),
   };
 }
 
-// Crea una reunión en Google Calendar y la guarda en la BD local
+function obtenerProveedorYCuenta(tipo: "GOOGLE" | "MICROSOFT") {
+  if (tipo === "GOOGLE") {
+    return { proveedor: obtenerGoogleProveedor(), cuenta: obtenerCuentaCalendario("GOOGLE") };
+  }
+  return { proveedor: obtenerMicrosoftProveedor(), cuenta: obtenerCuentaCalendario("MICROSOFT") };
+}
+
+// Crea una reunión en el calendario seleccionado y la guarda en la BD local
 export async function accionCrearReunion(
   _anterior: EstadoReunion,
   formulario: FormData,
 ): Promise<EstadoReunion> {
   await exigirSesion();
-  const { titulo, descripcion, inicio, fin } = leerCampos(formulario);
+  const { titulo, descripcion, inicio, fin, proveedor } = leerCampos(formulario);
 
   if (!titulo || typeof titulo !== "string" || titulo.trim() === "") {
     return { errores: { mensaje: "El título es obligatorio." } };
@@ -46,6 +55,8 @@ export async function accionCrearReunion(
     return { errores: { mensaje: "La fecha de fin es obligatoria." } };
   }
 
+  const tipoProveedor = proveedor === "MICROSOFT" ? "MICROSOFT" : "GOOGLE";
+
   const fechaInicio = new Date(inicio);
   const fechaFin = new Date(fin);
   if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
@@ -56,24 +67,36 @@ export async function accionCrearReunion(
   }
 
   try {
-    const proveedor = obtenerGoogleProveedor();
-    if (!proveedor.estaConfigurado()) {
+    const { proveedor: prov, cuenta } = obtenerProveedorYCuenta(tipoProveedor);
+    if (!prov.estaConfigurado()) {
       return {
-        errores: { mensaje: "Google Calendar no está configurado. Agrega las variables en .env." },
+        errores: {
+          mensaje:
+            tipoProveedor === "GOOGLE"
+              ? "Google Calendar no está configurado. Agrega las variables en .env."
+              : "Microsoft Calendar no está configurado. Agrega las variables en .env.",
+        },
       };
     }
-    const cuenta = await obtenerCuentaCalendario("GOOGLE");
-    if (!cuenta || !cuenta.refreshTokenCifrado) {
-      return { errores: { mensaje: "Cuenta de Google Calendar no conectada." } };
+    const cuentaDb = await cuenta;
+    if (!cuentaDb || !cuentaDb.refreshTokenCifrado) {
+      return {
+        errores: {
+          mensaje:
+            tipoProveedor === "GOOGLE"
+              ? "Cuenta de Google Calendar no conectada."
+              : "Cuenta de Microsoft Calendar no conectada.",
+        },
+      };
     }
 
-    const evento = await proveedor.crearEvento({
+    const evento = await prov.crearEvento({
       titulo: titulo.trim(),
       descripcion: typeof descripcion === "string" ? descripcion.trim() : undefined,
       inicio: fechaInicio,
       fin: fechaFin,
     });
-    await guardarReunion("GOOGLE", evento, cuenta.id);
+    await guardarReunion(tipoProveedor, evento, cuentaDb.id);
     revalidatePath("/calendario");
     return {};
   } catch (e) {
@@ -85,26 +108,37 @@ export async function accionCrearReunion(
   }
 }
 
-// Desconecta la cuenta de Google Calendar y elimina las reuniones sincronizadas
-export async function accionDesconectarCalendario(): Promise<void> {
+// Desconecta la cuenta del calendario seleccionado
+export async function accionDesconectarCalendario(
+  proveedor: "GOOGLE" | "MICROSOFT" = "GOOGLE",
+): Promise<void> {
   await exigirSesion();
-  await desconectarCalendario("GOOGLE");
+  await desconectarCalendario(proveedor);
   revalidatePath("/calendario");
 }
 
-// Sincroniza reuniones desde Google Calendar
+// Sincroniza reuniones desde el calendario seleccionado
 export type ResultadoSincronizacion =
   | { ok: true; cantidad: number }
   | { ok: false; codigo: ErrorCalendario["codigo"]; mensaje: string };
 
-export async function accionSincronizarCalendario(): Promise<ResultadoSincronizacion> {
+export async function accionSincronizarCalendario(
+  proveedor: "GOOGLE" | "MICROSOFT" = "GOOGLE",
+): Promise<ResultadoSincronizacion> {
   await exigirSesion();
-  const proveedor = obtenerGoogleProveedor();
-  if (!proveedor.estaConfigurado()) {
-    return { ok: false, codigo: "no-configurado", mensaje: "Google Calendar no configurado." };
+  const prov = proveedor === "GOOGLE" ? obtenerGoogleProveedor() : obtenerMicrosoftProveedor();
+  if (!prov.estaConfigurado()) {
+    return {
+      ok: false,
+      codigo: "no-configurado",
+      mensaje:
+        proveedor === "GOOGLE"
+          ? "Google Calendar no configurado."
+          : "Microsoft Calendar no configurado.",
+    };
   }
   try {
-    const cantidad = await sincronizarReuniones(proveedor);
+    const cantidad = await sincronizarReuniones(prov, proveedor);
     revalidatePath("/calendario");
     return { ok: true, cantidad };
   } catch (e) {
@@ -123,14 +157,20 @@ export async function obtenerReunionesLocales(fechaInicio?: Date, fechaFin?: Dat
   return listarReunionesLocales(fechaInicio, fechaFin);
 }
 
-// Verifica el estado de la conexión
+// Verifica el estado de las conexiones de ambos calendarios
 export async function obtenerEstadoCalendario(): Promise<{
-  conectado: boolean;
-  configurado: boolean;
+  google: { conectado: boolean; configurado: boolean };
+  microsoft: { conectado: boolean; configurado: boolean };
 }> {
   await exigirSesion();
-  const proveedor = obtenerGoogleProveedor();
-  const configurado = proveedor.estaConfigurado();
-  const conectado = configurado ? await cuentaEstaConectada("GOOGLE") : false;
-  return { configurado, conectado };
+  const googleProveedor = obtenerGoogleProveedor();
+  const microsoftProveedor = obtenerMicrosoftProveedor();
+  const googleConfigurado = googleProveedor.estaConfigurado();
+  const microsoftConfigurado = microsoftProveedor.estaConfigurado();
+  const googleConectado = googleConfigurado ? await cuentaEstaConectada("GOOGLE") : false;
+  const microsoftConectado = microsoftConfigurado ? await cuentaEstaConectada("MICROSOFT") : false;
+  return {
+    google: { configurado: googleConfigurado, conectado: googleConectado },
+    microsoft: { configurado: microsoftConfigurado, conectado: microsoftConectado },
+  };
 }

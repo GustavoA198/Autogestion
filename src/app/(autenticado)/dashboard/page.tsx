@@ -61,13 +61,18 @@ async function BloqueReuniones() {
       <ul className="space-y-2">
         {res.reuniones.map((r) => (
           <li key={r.idExterno} className="flex items-start gap-3 text-sm">
-            <span className="font-mono text-xs text-base-content/60 mt-0.5 shrink-0">
+            <span className="text-base-content/60 mt-0.5 shrink-0 font-mono text-xs">
               {formatearHora(r.inicio)}
             </span>
-            <div className="flex flex-col min-w-0">
-              <span className="font-medium truncate">{r.titulo}</span>
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate font-medium">{r.titulo}</span>
               {r.enlaceReunion && (
-                <a href={r.enlaceReunion} target="_blank" rel="noopener noreferrer" className="link link-primary text-xs">
+                <a
+                  href={r.enlaceReunion}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link link-primary text-xs"
+                >
                   Unirse
                 </a>
               )}
@@ -83,11 +88,13 @@ async function BloqueNotificaciones({ cantidad }: { cantidad: number }) {
   return (
     <Tarjeta titulo="Avisos pendientes">
       {cantidad === 0 ? (
-        <p className="text-sm text-base-content/60">No hay avisos pendientes.</p>
+        <p className="text-base-content/60 text-sm">No hay avisos pendientes.</p>
       ) : (
         <div className="flex items-center gap-2">
           <span className="badge badge-warning">{cantidad}</span>
-          <span className="text-sm">aviso{cantidad !== 1 ? "s" : ""} pendiente{cantidad !== 1 ? "s" : ""}</span>
+          <span className="text-sm">
+            aviso{cantidad !== 1 ? "s" : ""} pendiente{cantidad !== 1 ? "s" : ""}
+          </span>
           <Link href="/notificaciones" className="btn btn-ghost btn-xs ml-auto">
             Ver
           </Link>
@@ -123,15 +130,15 @@ async function BloqueProyectos({ proyectos }: { proyectos: { id: string; nombre:
         </Link>
       }
     >
-      <ul className="grid gap-2 grid-cols-1 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {proyectos.map((p) => (
           <li key={p.id}>
             <Link
               href={`/proyectos/${p.id}`}
-              className="flex flex-col gap-1 p-3 rounded-btn bg-base-200 hover:bg-base-300 transition-colors"
+              className="rounded-btn bg-base-200 hover:bg-base-300 flex flex-col gap-1 p-3 transition-colors"
             >
-              <span className="font-medium text-sm truncate">{p.nombre}</span>
-              <div className="flex gap-3 text-xs text-base-content/60">
+              <span className="truncate text-sm font-medium">{p.nombre}</span>
+              <div className="text-base-content/60 flex gap-3 text-xs">
                 <span>credenciales</span>
                 <span>·</span>
                 <span>contactos</span>
@@ -160,7 +167,11 @@ async function BloqueEstadisticas({
   if (total === 0) {
     return (
       <Tarjeta titulo="Estadísticas">
-        <EstadoVacio icono="grafica" titulo="Sin datos" descripcion="Completa tareas para ver estadísticas." />
+        <EstadoVacio
+          icono="grafica"
+          titulo="Sin datos"
+          descripcion="Completa tareas para ver estadísticas."
+        />
       </Tarjeta>
     );
   }
@@ -177,18 +188,19 @@ async function BloqueEstadisticas({
 }
 
 export default async function Dashboard() {
-  const [resReuniones, resTareas, resProyectos, resEstadisticas, resNotificaciones] = await Promise.allSettled([
-    cargarReunionesHoy(),
-    cargarTareasDelDia(),
-    cargarProyectosAccesos(),
-    cargarEstadisticas(),
-    cargarNotificaciones(),
-  ]);
+  const [resReuniones, resTareas, resProyectos, resEstadisticas, resNotificaciones] =
+    await Promise.allSettled([
+      cargarReunionesHoy(),
+      cargarTareasDelDia(),
+      cargarProyectosAccesos(),
+      cargarEstadisticas(),
+      cargarNotificaciones(),
+    ]);
 
   // Helper para extraer error de un resultado, con narrowing correcto
   function obtenerError<T extends { ok: boolean; error?: string }>(
     res: PromiseSettledResult<T>,
-    mensajeDefault: string
+    mensajeDefault: string,
   ): string | null {
     if (res.status === "rejected") return mensajeDefault;
     if (!res.value.ok) return res.value.error ?? mensajeDefault;
@@ -202,8 +214,7 @@ export default async function Dashboard() {
       : null;
   const reunionesError = obtenerError(resReuniones, "Error al cargar reuniones.");
 
-  const tareas =
-    resTareas.status === "fulfilled" && resTareas.value.ok ? resTareas.value : null;
+  const tareas = resTareas.status === "fulfilled" && resTareas.value.ok ? resTareas.value : null;
   const tareasError = obtenerError(resTareas, "Error al cargar tareas.");
 
   const proyectos =
@@ -301,7 +312,18 @@ export default async function Dashboard() {
 }
 
 // Wrapper para que el bloque de reuniones funcione como async server component
-async function BloqueReunionesWrapper({ reuniones }: { reuniones: { idExterno: string; titulo: string; descripcion?: string; inicio: Date; fin: Date; enlaceReunion?: string }[] }) {
+async function BloqueReunionesWrapper({
+  reuniones,
+}: {
+  reuniones: {
+    idExterno: string;
+    titulo: string;
+    descripcion?: string;
+    inicio: Date;
+    fin: Date;
+    enlaceReunion?: string;
+  }[];
+}) {
   if (reuniones.length === 0) {
     return (
       <Tarjeta titulo="Reuniones de hoy">
@@ -330,11 +352,18 @@ async function BloqueReunionesWrapper({ reuniones }: { reuniones: { idExterno: s
       <ul className="space-y-2">
         {reuniones.map((r) => (
           <li key={r.idExterno} className="flex items-start gap-3 text-sm">
-            <span className="font-mono text-xs text-base-content/60 mt-0.5 shrink-0">{formatearHora(r.inicio)}</span>
-            <div className="flex flex-col min-w-0">
-              <span className="font-medium truncate">{r.titulo}</span>
+            <span className="text-base-content/60 mt-0.5 shrink-0 font-mono text-xs">
+              {formatearHora(r.inicio)}
+            </span>
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate font-medium">{r.titulo}</span>
               {r.enlaceReunion && (
-                <a href={r.enlaceReunion} target="_blank" rel="noopener noreferrer" className="link link-primary text-xs">
+                <a
+                  href={r.enlaceReunion}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link link-primary text-xs"
+                >
                   Unirse
                 </a>
               )}

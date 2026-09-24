@@ -1,6 +1,6 @@
 // Intercambia el código OAuth por tokens y los guarda cifrados
 import { NextRequest, NextResponse } from "next/server";
-import { obtenerGoogleProveedor } from "@/lib/calendario/google/proveedor-google";
+import { obtenerMicrosoftProveedor } from "@/lib/calendario/microsoft/proveedor-microsoft";
 import { sincronizarReuniones } from "@/lib/calendario/operaciones";
 
 export async function GET(solicitud: NextRequest) {
@@ -16,10 +16,10 @@ export async function GET(solicitud: NextRequest) {
   }
 
   try {
-    const proveedor = obtenerGoogleProveedor();
+    const proveedor = obtenerMicrosoftProveedor();
     await proveedor.guardarTokensDesdeCode(code);
-    await sincronizarReuniones(proveedor, "GOOGLE");
-    return NextResponse.redirect(new URL("/calendario?conectado=google", solicitud.url));
+    await sincronizarReuniones(proveedor, "MICROSOFT");
+    return NextResponse.redirect(new URL("/calendario?conectado=microsoft", solicitud.url));
   } catch (e) {
     const mensaje = e instanceof Error ? e.message : "Error desconocido";
     return NextResponse.redirect(
