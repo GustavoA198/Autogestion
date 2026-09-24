@@ -9,6 +9,7 @@ import { EnlaceDocumentacion } from "../enlace-documentacion";
 import { BotonEliminar } from "./boton-eliminar";
 import { SeccionCredenciales } from "./seccion-credenciales";
 import { SeccionContactos } from "./seccion-contactos";
+import { SeccionNotas } from "./seccion-notas";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export default async function FichaProyecto({ params }: PageProps<"/proyectos/[i
             <p className="text-sm opacity-70">Este proyecto no tiene enlace de documentacion.</p>
           )}
         </Tarjeta>
+        <SeccionNotas proyectoId={proyecto.id} />
         <div className="grid gap-6 md:grid-cols-2">
           <SeccionCredenciales proyectoId={proyecto.id} />
           <SeccionContactos proyectoId={proyecto.id} />
