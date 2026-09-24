@@ -1,13 +1,27 @@
 import { z } from "zod";
 
-const esquema = z.object({
+type Fuente = Record<string, string | undefined>;
+
+const FORMATO_HASH = /^scrypt:\d+:\d+:\d+:[\w-]+:[\w-]+$/;
+
+const esquemaBaseDatos = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, "debe ser una URL de PostgreSQL"),
 });
 
-export type Entorno = z.infer<typeof esquema>;
+const esquemaAuth = z.object({
+  AUTH_USUARIO: z.string().min(3, "mínimo 3 caracteres"),
+  AUTH_CLAVE_HASH: z
+    .string()
+    .regex(FORMATO_HASH, "no tiene el formato generado por auth:configurar"),
+  NEXTAUTH_SECRET: z.string().min(32, "mínimo 32 caracteres"),
+  NEXTAUTH_URL: z.url("debe ser una URL válida"),
+});
 
-// Valida las variables de entorno y falla con un mensaje claro si faltan o son inválidas
-export function leerEntorno(fuente: Record<string, string | undefined> = process.env): Entorno {
+export type EntornoBaseDatos = z.infer<typeof esquemaBaseDatos>;
+export type EntornoAuth = z.infer<typeof esquemaAuth>;
+
+// Falla con un mensaje claro que nombra las variables inválidas, sin revelar sus valores
+function validar<T>(esquema: z.ZodType<T>, fuente: Fuente): T {
   const resultado = esquema.safeParse(fuente);
 
   if (!resultado.success) {
@@ -16,4 +30,12 @@ export function leerEntorno(fuente: Record<string, string | undefined> = process
   }
 
   return resultado.data;
+}
+
+export function leerEntornoBaseDatos(fuente: Fuente = process.env): EntornoBaseDatos {
+  return validar(esquemaBaseDatos, fuente);
+}
+
+export function leerEntornoAuth(fuente: Fuente = process.env): EntornoAuth {
+  return validar(esquemaAuth, fuente);
 }
