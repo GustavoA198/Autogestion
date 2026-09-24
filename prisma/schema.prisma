@@ -217,3 +217,36 @@ model Reunion {
   @@index([cuentaCalendarioId, inicio])
   @@map("reunion")
 }
+
+// Tipo de notificación interna
+enum TipoNotificacion {
+  REUNION_PROXIMA @map("reunion_proxima")
+  TAREA_VENCE_HOY @map("tarea_vence_hoy")
+
+  @@map("tipo_notificacion")
+}
+
+// Notificación interna; se descarte por referencia, no por contenido
+model Notificacion {
+  id            String           @id @default(cuid())
+  tipo          TipoNotificacion
+  referenciaId  String           @map("referencia_id")
+  titulo        String
+  mensaje       String
+  fechaEvento  DateTime         @map("fecha_evento")
+  creadoEn     DateTime         @default(now()) @map("creado_en")
+  descartada   NotificacionDescartada?
+
+  @@unique([tipo, referenciaId, fechaEvento])
+  @@map("notificacion")
+}
+
+// Registro de descarte; evita que una notificación reaparezca para el mismo evento
+model NotificacionDescartada {
+  notificacionId String       @map("notificacion_id")
+  descartadaEn  DateTime     @default(now()) @map("descartada_en")
+  notificacion   Notificacion @relation(fields: [notificacionId], references: [id], onDelete: Cascade)
+
+  @@id([notificacionId])
+  @@map("notificacion_descartada")
+}
