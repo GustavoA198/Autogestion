@@ -87,8 +87,19 @@ Los tokens de diseño (color, tipografía, radios, sombras y foco) viven en `src
 | `npm run cifrado:configurar` | Genera `CLAVE_CIFRADO` en `.env` sin sobrescribir una existente |
 | `npm run db:migrate`         | Crea y aplica una migración en desarrollo                       |
 | `npm run db:deploy`          | Aplica las migraciones pendientes                               |
-| `npm run db:studio`          | Abre Prisma Studio                                              |
-| `npm run verify`             | Lint, tipos, pruebas y compilación                              |
+
+## Restauración de respaldo
+
+Si necesitas restaurar la base de datos desde un archivo SQL:
+
+1. Asegúrate de que `DATABASE_URL_RESTORE` está configurada en `.env` (puede ser igual o diferente a `DATABASE_URL`).
+2. Ve a `/respaldo` y haz clic en "Restaurar desde archivo".
+3. Selecciona el archivo `.sql` o `.sql.gz` generado por un respaldo anterior.
+4. Confirma la acción.
+
+El archivo puede estar comprimido con gzip (extensión `.sql.gz`) o sin comprimir (`.sql`). El proceso sobrescribe los datos actuales de la base de datos.
+| `npm run db:studio` | Abre Prisma Studio |
+| `npm run verify` | Lint, tipos, pruebas y compilación |
 
 Para ejecutar una sola prueba unitaria: `npx vitest run src/lib/env.test.ts`.
 
