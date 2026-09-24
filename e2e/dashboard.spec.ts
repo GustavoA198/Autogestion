@@ -22,8 +22,12 @@ test.describe("dashboard", () => {
     await expect(page.getByRole("link", { name: "Ver todos" }).first()).toBeVisible();
   });
 
-  test("el estado vacio del bloque de reuniones no muestra errores inventados", async ({ page }) => {
-    const reuniones = page.getByRole("heading", { level: 2, name: "Reuniones de hoy" }).locator("..");
+  test("el estado vacio del bloque de reuniones no muestra errores inventados", async ({
+    page,
+  }) => {
+    const reuniones = page
+      .getByRole("heading", { level: 2, name: "Reuniones de hoy" })
+      .locator("..");
     const contenido = await reuniones.textContent();
     void contenido;
     await expect(page.getByText(/Sin reuniones|No hay reuniones/i)).toBeVisible();

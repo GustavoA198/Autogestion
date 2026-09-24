@@ -1,15 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-  fechaInicioSemana,
-  agruparPorSemana,
-  agruparPorProyecto,
-} from "./calculos";
+import { fechaInicioSemana, agruparPorSemana, agruparPorProyecto } from "./calculos";
 import type { TareaCompletadaConTarea } from "./calculos";
 
 const makeTareaCompletada = (
   fecha: string,
   tareaId = "tarea-1",
-  proyectoId: string | null = "proy-1"
+  proyectoId: string | null = "proy-1",
 ): TareaCompletadaConTarea => {
   // 12h UTC para que la fecha caiga en el dia correcto en cualquier zona
   const utcMediodia = new Date(fecha + "T12:00:00Z");
@@ -77,10 +73,7 @@ describe("agruparPorSemana", () => {
   });
 
   it("completadas en semanas distintas crean entradas separadas", () => {
-    const completadas = [
-      makeTareaCompletada("2026-09-21"),
-      makeTareaCompletada("2026-09-28"),
-    ];
+    const completadas = [makeTareaCompletada("2026-09-21"), makeTareaCompletada("2026-09-28")];
     const resultado = agruparPorSemana(completadas, "America/Bogota");
     expect(resultado).toHaveLength(2);
     expect(resultado[0].semana).toBe("2026-09-21");
@@ -120,9 +113,7 @@ describe("agruparPorProyecto", () => {
   });
 
   it("tarea sin proyecto agrupa en null", () => {
-    const completadas = [
-      makeTareaCompletada("2026-09-21", "t1", null),
-    ];
+    const completadas = [makeTareaCompletada("2026-09-21", "t1", null)];
     const resultado = agruparPorProyecto(completadas, proyectos);
     expect(resultado.find((r) => r.proyectoId === null)).toBeUndefined();
   });
