@@ -1,0 +1,30 @@
+# Dependencias
+/node_modules
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+
+# Cliente generado por Prisma
+/src/generated/
+
+# Variables de entorno (solo se versiona el ejemplo)
+.env
+.env.*
+!.env.example
+
+# Datos locales de PostgreSQL
+/datos/
+
+# Pruebas y cobertura
+/coverage/
+/playwright-report/
+/test-results/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+*.log
+*.tsbuildinfo
+.vercel
