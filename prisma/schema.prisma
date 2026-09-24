@@ -16,3 +16,15 @@ model IntentoAcceso {
   @@index([clave, creadoEn])
   @@map("intento_acceso")
 }
+
+// Frente de trabajo: ficha liviana con enlace a su documentación real
+model Proyecto {
+  id                  String   @id @default(cuid())
+  nombre              String   @unique
+  descripcion         String?
+  enlaceDocumentacion String?  @map("enlace_documentacion")
+  creadoEn            DateTime @default(now()) @map("creado_en")
+  actualizadoEn       DateTime @updatedAt @map("actualizado_en")
+
+  @@map("proyecto")
+}
