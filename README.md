@@ -21,7 +21,18 @@ Herramienta personal para centralizar el trabajo en varios frentes o proyectos: 
 cp .env.example .env
 # Edita .env y cambia POSTGRES_PASSWORD (y la misma clave dentro de DATABASE_URL)
 npm install
+npm run auth:configurar
 ```
+
+`npm run auth:configurar` es interactivo: pide el usuario y la contraseña (mínimo 12 caracteres, sin mostrarla en pantalla), guarda solo su hash en `.env` y genera el secreto de sesión. Repítelo para cambiar la contraseña.
+
+## Acceso y seguridad
+
+- Toda la aplicación exige sesión; solo `/login`, `/api/auth/*` y `/api/health` son públicas. Sin sesión, las páginas redirigen a `/login` y la API responde 401.
+- La contraseña se guarda como hash `scrypt`; nunca en texto plano. La sesión dura 12 horas y viaja en una cookie `httpOnly` (`secure` cuando la aplicación se sirve por HTTPS).
+- Los intentos de acceso se limitan a 5 por IP cada 15 minutos (y 100 en total), con el conteo guardado en PostgreSQL.
+- Si se pierde `NEXTAUTH_SECRET` solo se cierran las sesiones abiertas; basta con generar otro.
+- Detrás de un proxy, la IP se toma de `x-forwarded-for`: la plataforma de despliegue debe fijar esa cabecera.
 
 ## Ejecutar con Docker
 
@@ -48,25 +59,26 @@ npm run dev
 
 ## Comandos
 
-| Comando                 | Descripción                                              |
-| ----------------------- | -------------------------------------------------------- |
-| `npm run dev`           | Servidor de desarrollo                                   |
-| `npm run build`         | Compilación de producción                                |
-| `npm start`             | Servidor de producción                                   |
-| `npm run lint`          | Análisis estático con ESLint                             |
-| `npm run typecheck`     | Verificación de tipos                                    |
-| `npm run format`        | Da formato con Prettier                                  |
-| `npm run format:check`  | Comprueba el formato sin modificar archivos              |
-| `npm test`              | Pruebas unitarias                                        |
-| `npm run test:coverage` | Pruebas unitarias con cobertura                          |
-| `npm run test:e2e`      | Pruebas de extremo a extremo (requiere la base de datos) |
-| `npm run db:migrate`    | Crea y aplica una migración en desarrollo                |
-| `npm run db:deploy`     | Aplica las migraciones pendientes                        |
-| `npm run db:studio`     | Abre Prisma Studio                                       |
-| `npm run verify`        | Lint, tipos, pruebas y compilación                       |
+| Comando                   | Descripción                                              |
+| ------------------------- | -------------------------------------------------------- |
+| `npm run dev`             | Servidor de desarrollo                                   |
+| `npm run build`           | Compilación de producción                                |
+| `npm start`               | Servidor de producción                                   |
+| `npm run lint`            | Análisis estático con ESLint                             |
+| `npm run typecheck`       | Verificación de tipos                                    |
+| `npm run format`          | Da formato con Prettier                                  |
+| `npm run format:check`    | Comprueba el formato sin modificar archivos              |
+| `npm test`                | Pruebas unitarias                                        |
+| `npm run test:coverage`   | Pruebas unitarias con cobertura                          |
+| `npm run test:e2e`        | Pruebas de extremo a extremo (requiere la base de datos) |
+| `npm run auth:configurar` | Define usuario y contraseña de acceso en `.env`          |
+| `npm run db:migrate`      | Crea y aplica una migración en desarrollo                |
+| `npm run db:deploy`       | Aplica las migraciones pendientes                        |
+| `npm run db:studio`       | Abre Prisma Studio                                       |
+| `npm run verify`          | Lint, tipos, pruebas y compilación                       |
 
 Para ejecutar una sola prueba unitaria: `npx vitest run src/lib/env.test.ts`.
 
 ## Base de datos
 
-El esquema está en `prisma/schema.prisma`. Tras modificarlo se genera la migración con `npm run db:migrate`. El cliente generado queda en `src/generated/prisma` y no se versiona; `npm install` lo regenera.
+El esquema está en `prisma/schema.prisma`. Tras modificarlo se genera la migración con `npm run db:migrate` y se regenera el cliente con `npm run db:generate` (Prisma 7 no lo hace solo). El cliente queda en `src/generated/prisma` y no se versiona; `npm install` lo regenera.

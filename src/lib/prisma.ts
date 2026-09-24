@@ -1,11 +1,11 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
-import { leerEntorno } from "@/lib/env";
+import { leerEntornoBaseDatos } from "@/lib/env";
 
 const global_ = globalThis as unknown as { prisma?: PrismaClient };
 
 function crearCliente(): PrismaClient {
-  const adapter = new PrismaPg({ connectionString: leerEntorno().DATABASE_URL });
+  const adapter = new PrismaPg({ connectionString: leerEntornoBaseDatos().DATABASE_URL });
   return new PrismaClient({ adapter });
 }
 

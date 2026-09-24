@@ -6,3 +6,13 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// Cada intento de inicio de sesión, para limitar la fuerza bruta entre instancias
+model IntentoAcceso {
+  id       String   @id @default(cuid())
+  clave    String
+  creadoEn DateTime @default(now()) @map("creado_en")
+
+  @@index([clave, creadoEn])
+  @@map("intento_acceso")
+}
