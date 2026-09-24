@@ -55,3 +55,18 @@ export type EntornoCifrado = z.infer<typeof esquemaCifrado>;
 export function leerEntornoCifrado(fuente: Fuente = process.env): EntornoCifrado {
   return validar(esquemaCifrado, fuente);
 }
+
+const esquemaCalendario = z.object({
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z
+    .string()
+    .optional()
+    .transform((v) => v ?? "http://localhost:3100/api/calendario/google/callback"),
+});
+
+export type EntornoCalendario = z.infer<typeof esquemaCalendario>;
+
+export function leerEntornoCalendario(fuente: Fuente = process.env): EntornoCalendario {
+  return esquemaCalendario.parse(fuente);
+}

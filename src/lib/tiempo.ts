@@ -16,3 +16,21 @@ export function tiempoRelativo(fecha: Date, ahora: Date = new Date()): string {
   }
   return "ahora";
 }
+
+// Formateadores para fechas y horas en español
+const formatoFecha = new Intl.DateTimeFormat("es-ES", {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+const formatoHora = new Intl.DateTimeFormat("es-ES", {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+export const formatters = {
+  fecha: (fecha: Date) => formatoFecha.format(fecha),
+  hora: (fecha: Date) => formatoHora.format(fecha),
+};
