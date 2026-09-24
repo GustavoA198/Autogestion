@@ -24,7 +24,7 @@ export default defineConfig({
     {
       // Reutiliza la sesiÃ³n guardada para no gastar intentos del limitador en cada prueba
       name: "chromium-con-sesion",
-      testMatch: /(shell|proyectos|credenciales)\.spec\.ts/,
+      testMatch: /(shell|proyectos|credenciales|contactos)\.spec\.ts/,
       dependencies: ["preparacion"],
       use: { ...devices["Desktop Chrome"], storageState: ARCHIVO_SESION },
     },
