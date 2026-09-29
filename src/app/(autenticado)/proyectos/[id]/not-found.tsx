@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BotonEnlace } from "@/componentes/enlace";
 import { EstadoVacio } from "@/componentes/estado-vacio";
 
 export default function ProyectoNoEncontrado() {
@@ -7,11 +7,7 @@ export default function ProyectoNoEncontrado() {
       icono="proyectos"
       titulo="Proyecto no encontrado"
       descripcion="El proyecto no existe o ya fue eliminado."
-      accion={
-        <Link href="/proyectos" className="btn btn-primary">
-          Volver a proyectos
-        </Link>
-      }
+      accion={<BotonEnlace href="/proyectos">Volver a proyectos</BotonEnlace>}
     />
   );
 }

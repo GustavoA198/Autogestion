@@ -1,122 +1,42 @@
-// Dashboard principal con bloques independientes.
-// Cada bloque tolera fallos propios gracias a Promise.allSettled.
+// Panel principal con bloques independientes que toleran fallos propios (Promise.allSettled).
 
-import Link from "next/link";
-import { Metadata } from "next";
-import { Tarjeta } from "@/componentes/shell/tarjeta";
-import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
-import { EstadoVacio } from "@/componentes/estado-vacio";
 import { EstadoError } from "@/componentes/estado-error";
-import { ResumenEstadisticas } from "@/componentes/resumen-estadisticas";
+import { EstadoVacio } from "@/componentes/estado-vacio";
+import { BotonEnlace, Enlace } from "@/componentes/enlace";
+import { GraficaBarras } from "@/componentes/grafica-barras";
+import { Icono } from "@/componentes/icono";
+import { barrasPorSemana } from "@/componentes/resumen-estadisticas";
+import { Tarjeta } from "@/componentes/shell/tarjeta";
+import { TarjetaKpi } from "@/componentes/shell/tarjeta-kpi";
+import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
+import { BloqueRetoma, FranjaSinAvance } from "./dashboard-bitacora";
+import { BloquePendientes } from "./dashboard-pendientes";
+import { BloqueReuniones } from "./dashboard-reuniones";
 import { BloqueTareas, BloqueTareasError } from "./dashboard-tareas-bloque";
+import { BloqueVencenPronto } from "./dashboard-vencen-pronto";
 import {
   cargarReunionesHoy,
   cargarTareasDelDia,
+  cargarTareasVencenPronto,
   cargarProyectosAccesos,
   cargarEstadisticas,
   cargarNotificaciones,
+  cargarPendientes,
+  cargarProyectosSinAvance,
+  cargarUltimaBitacora,
 } from "./dashboard-data";
 
-export const metadata: Metadata = { title: "Panel · Autogestión" };
 export const dynamic = "force-dynamic";
 
-function formatearHora(date: Date): string {
-  return new Intl.DateTimeFormat("es-CO", { hour: "2-digit", minute: "2-digit" }).format(date);
-}
-
-async function BloqueReuniones() {
-  const res = await cargarReunionesHoy();
-  if (!res.ok) {
-    return (
-      <Tarjeta titulo="Reuniones de hoy">
-        <EstadoError mensaje={res.error} />
-      </Tarjeta>
-    );
-  }
-  if (res.reuniones.length === 0) {
-    return (
-      <Tarjeta titulo="Reuniones de hoy">
-        <EstadoVacio
-          icono="calendario"
-          titulo="Sin reuniones"
-          descripcion="No hay reuniones registradas para hoy."
-          accion={
-            <Link href="/calendario" className="btn btn-ghost btn-sm">
-              Ir al calendario
-            </Link>
-          }
-        />
-      </Tarjeta>
-    );
-  }
-  return (
-    <Tarjeta
-      titulo="Reuniones de hoy"
-      accion={
-        <Link href="/calendario" className="btn btn-ghost btn-xs">
-          Ver calendario
-        </Link>
-      }
-    >
-      <ul className="space-y-2">
-        {res.reuniones.map((r) => (
-          <li key={r.idExterno} className="flex items-start gap-3 text-sm">
-            <span className="text-base-content/60 mt-0.5 shrink-0 font-mono text-xs">
-              {formatearHora(r.inicio)}
-            </span>
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate font-medium">{r.titulo}</span>
-              {r.enlaceReunion && (
-                <a
-                  href={r.enlaceReunion}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link link-primary text-xs"
-                >
-                  Unirse
-                </a>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Tarjeta>
-  );
-}
-
-async function BloqueNotificaciones({ cantidad }: { cantidad: number }) {
-  return (
-    <Tarjeta titulo="Avisos pendientes">
-      {cantidad === 0 ? (
-        <p className="text-base-content/60 text-sm">No hay avisos pendientes.</p>
-      ) : (
-        <div className="flex items-center gap-2">
-          <span className="badge badge-warning">{cantidad}</span>
-          <span className="text-sm">
-            aviso{cantidad !== 1 ? "s" : ""} pendiente{cantidad !== 1 ? "s" : ""}
-          </span>
-          <Link href="/notificaciones" className="btn btn-ghost btn-xs ml-auto">
-            Ver
-          </Link>
-        </div>
-      )}
-    </Tarjeta>
-  );
-}
-
-async function BloqueProyectos({ proyectos }: { proyectos: { id: string; nombre: string }[] }) {
+function BloqueProyectos({ proyectos }: { proyectos: { id: string; nombre: string }[] }) {
   if (proyectos.length === 0) {
     return (
-      <Tarjeta titulo="Accesos rápidos">
+      <Tarjeta titulo="Proyectos">
         <EstadoVacio
           icono="proyectos"
-          titulo="Sin proyectos"
-          descripcion="Crea un proyecto para ver accesos rápidos aquí."
-          accion={
-            <Link href="/proyectos/nuevo" className="btn btn-primary btn-sm">
-              Nuevo proyecto
-            </Link>
-          }
+          titulo="Aún no hay proyectos"
+          descripcion="Crea un proyecto para tener sus accesos rápidos aquí."
+          accion={<BotonEnlace href="/proyectos/nuevo">Nuevo proyecto</BotonEnlace>}
         />
       </Tarjeta>
     );
@@ -125,89 +45,118 @@ async function BloqueProyectos({ proyectos }: { proyectos: { id: string; nombre:
     <Tarjeta
       titulo="Proyectos"
       accion={
-        <Link href="/proyectos" className="btn btn-ghost btn-xs">
+        <Enlace href="/proyectos" className="text-sm">
           Ver todos
-        </Link>
+        </Enlace>
       }
     >
-      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {proyectos.map((p) => (
-          <li key={p.id}>
-            <Link
-              href={`/proyectos/${p.id}`}
-              className="rounded-btn bg-base-200 hover:bg-base-300 flex flex-col gap-1 p-3 transition-colors"
-            >
-              <span className="truncate text-sm font-medium">{p.nombre}</span>
-              <div className="text-base-content/60 flex gap-3 text-xs">
-                <span>credenciales</span>
-                <span>·</span>
-                <span>contactos</span>
-                <span>·</span>
-                <span>notas</span>
-                <span>·</span>
-                <span>tareas</span>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="@container">
+        <ul className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-3">
+          {proyectos.map((p) => (
+            <li key={p.id} className="min-w-0">
+              <Enlace
+                href={`/proyectos/${p.id}`}
+                discreto
+                title={p.nombre}
+                className="tarjeta-fila flex min-h-14 cursor-pointer items-center gap-3 px-4 py-3"
+              >
+                <span className="bg-primary/15 text-primary grid size-9 shrink-0 place-items-center rounded-full">
+                  <Icono nombre="proyectos" tamano={16} />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm font-bold" title={p.nombre}>
+                  {p.nombre}
+                </span>
+                <Icono nombre="chevron-derecha" tamano={16} className="text-tenue" />
+              </Enlace>
+            </li>
+          ))}
+        </ul>
+      </div>
     </Tarjeta>
   );
 }
 
-async function BloqueEstadisticas({
+function BloqueEstadisticas({
   datosSemana,
-  datosProyecto,
   total,
 }: {
   datosSemana: { semana: string; cantidad: number }[];
-  datosProyecto: { proyectoId: string | null; nombre: string; cantidad: number }[];
   total: number;
 }) {
-  if (total === 0) {
-    return (
-      <Tarjeta titulo="Estadísticas">
+  return (
+    <Tarjeta
+      titulo="Ritmo de las últimas 4 semanas"
+      accion={
+        <Enlace href="/estadisticas" className="text-sm">
+          Ver más
+        </Enlace>
+      }
+    >
+      {total === 0 ? (
         <EstadoVacio
           icono="grafica"
-          titulo="Sin datos"
-          descripcion="Completa tareas para ver estadísticas."
+          titulo="Sin datos todavía"
+          descripcion="Completa tareas y aquí verás tu ritmo semanal."
         />
-      </Tarjeta>
-    );
-  }
-  return (
-    <Tarjeta titulo="Estadísticas (4 sem)">
-      <ResumenEstadisticas
-        datosSemana={datosSemana}
-        datosProyecto={datosProyecto}
-        total={total}
-        periodoSemanas={4}
-      />
+      ) : (
+        <GraficaBarras
+          datos={barrasPorSemana(datosSemana)}
+          titulo="Tareas completadas por semana"
+          altoMaximo={140}
+        />
+      )}
     </Tarjeta>
   );
 }
 
+// Aviso destacado cuando hay recordatorios sin atender
+function FranjaAvisos({ cantidad }: { cantidad: number }) {
+  if (cantidad === 0) return null;
+  return (
+    <div className="border-warning/30 bg-warning/8 mb-6 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 text-sm">
+      <Icono nombre="campana" tamano={18} className="text-warning shrink-0" />
+      <p className="min-w-0 flex-1">
+        Tienes <strong>{cantidad}</strong> aviso{cantidad !== 1 ? "s" : ""} pendiente
+        {cantidad !== 1 ? "s" : ""}.
+      </p>
+      <Enlace href="/notificaciones">Revisar avisos</Enlace>
+    </div>
+  );
+}
+
+// Extrae el mensaje de error de un resultado, con narrowing correcto
+function obtenerError<T extends { ok: boolean; error?: string }>(
+  res: PromiseSettledResult<T>,
+  mensajeDefault: string,
+): string | null {
+  if (res.status === "rejected") return mensajeDefault;
+  if (!res.value.ok) return res.value.error ?? mensajeDefault;
+  return null;
+}
+
 export default async function Dashboard() {
-  const [resReuniones, resTareas, resProyectos, resEstadisticas, resNotificaciones] =
-    await Promise.allSettled([
-      cargarReunionesHoy(),
-      cargarTareasDelDia(),
-      cargarProyectosAccesos(),
-      cargarEstadisticas(),
-      cargarNotificaciones(),
-    ]);
+  const [
+    resReuniones,
+    resTareas,
+    resVencen,
+    resProyectos,
+    resEstadisticas,
+    resNotificaciones,
+    resBitacora,
+    resSinAvance,
+    resPendientes,
+  ] = await Promise.allSettled([
+    cargarReunionesHoy(),
+    cargarTareasDelDia(),
+    cargarTareasVencenPronto(),
+    cargarProyectosAccesos(),
+    cargarEstadisticas(),
+    cargarNotificaciones(),
+    cargarUltimaBitacora(),
+    cargarProyectosSinAvance(),
+    cargarPendientes(),
+  ]);
 
-  // Helper para extraer error de un resultado, con narrowing correcto
-  function obtenerError<T extends { ok: boolean; error?: string }>(
-    res: PromiseSettledResult<T>,
-    mensajeDefault: string,
-  ): string | null {
-    if (res.status === "rejected") return mensajeDefault;
-    if (!res.value.ok) return res.value.error ?? mensajeDefault;
-    return null;
-  }
-
-  // Extraer resultados de PromiseSettled
   const reuniones =
     resReuniones.status === "fulfilled" && resReuniones.value.ok
       ? resReuniones.value.reuniones
@@ -216,6 +165,8 @@ export default async function Dashboard() {
 
   const tareas = resTareas.status === "fulfilled" && resTareas.value.ok ? resTareas.value : null;
   const tareasError = obtenerError(resTareas, "Error al cargar tareas.");
+
+  const vencen = resVencen.status === "fulfilled" ? resVencen.value : null;
 
   const proyectos =
     resProyectos.status === "fulfilled" && resProyectos.value.ok
@@ -233,144 +184,122 @@ export default async function Dashboard() {
     resNotificaciones.status === "fulfilled" && resNotificaciones.value.ok
       ? resNotificaciones.value.cantidad
       : 0;
+  const urgentes =
+    resNotificaciones.status === "fulfilled" && resNotificaciones.value.ok
+      ? resNotificaciones.value.urgentes
+      : 0;
+
+  const bitacora = resBitacora.status === "fulfilled" ? resBitacora.value : null;
+  const sinAvance = resSinAvance.status === "fulfilled" ? resSinAvance.value : null;
+  const pendientes = resPendientes.status === "fulfilled" ? resPendientes.value : null;
+
+  const totalTareasHoy = tareas ? tareas.recurrentes.length + tareas.puntuales.length : 0;
+  const vencenOk = vencen?.ok ? vencen : null;
 
   return (
     <>
       <TituloSeccion
-        modulo="Centro de mando"
-        titulo="Panel del día"
-        descripcion="Resumen del estado operativo: reuniones, tareas y accesos rápidos."
+        modulo="Panel"
+        titulo="Tu día de un vistazo"
+        descripcion="Agenda, tareas y avisos para arrancar la jornada sin buscar nada."
+        accion={
+          <BotonEnlace href="/tareas/nueva" variante="secundario">
+            <Icono nombre="mas" tamano={16} />
+            Nueva tarea
+          </BotonEnlace>
+        }
       />
-      <div className="grid gap-6">
-        {/* Fila 1: reuniones + tareas */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {reunionesError ? (
-            <Tarjeta titulo="Reuniones de hoy">
-              <EstadoError
-                mensaje={reunionesError}
-                accion={
-                  <Link href="/calendario" className="btn btn-ghost btn-sm">
-                    Conectar calendario
-                  </Link>
-                }
-              />
-            </Tarjeta>
-          ) : reuniones !== null ? (
-            <BloqueReunionesWrapper reuniones={reuniones} />
-          ) : (
-            <Tarjeta titulo="Reuniones de hoy">
-              <div className="skeleton h-16 w-full" />
-            </Tarjeta>
-          )}
+      <FranjaAvisos cantidad={notificaciones} />
+      <FranjaSinAvance resultado={sinAvance} />
+      <div className="mb-6">
+        <BloqueRetoma resultado={bitacora} />
+      </div>
 
-          {tareasError ? (
-            <BloqueTareasError mensaje={tareasError} />
-          ) : tareas !== null ? (
-            <BloqueTareas recurrentes={tareas.recurrentes} puntuales={tareas.puntuales} />
-          ) : (
-            <Tarjeta titulo="Tareas del día">
-              <div className="skeleton h-16 w-full" />
-            </Tarjeta>
-          )}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
+        <TarjetaKpi
+          etiqueta="Tareas para hoy"
+          valor={tareas ? String(totalTareasHoy) : "—"}
+          icono="lista"
+          detalle={
+            tareas
+              ? `${tareas.recurrentes.length} ${tareas.recurrentes.length === 1 ? "fija" : "fijas"} · ${tareas.puntuales.length} ${tareas.puntuales.length === 1 ? "puntual" : "puntuales"}`
+              : undefined
+          }
+          tonoDetalle="info"
+          tono="info"
+        />
+        <TarjetaKpi
+          etiqueta="Vencen en 5 días o menos"
+          valor={vencenOk ? String(vencenOk.proximas) : "—"}
+          icono="reloj"
+          detalle={
+            vencenOk
+              ? vencenOk.vencidas > 0
+                ? `${vencenOk.vencidas} ${vencenOk.vencidas === 1 ? "vencida" : "vencidas"}`
+                : "Ninguna vencida"
+              : undefined
+          }
+          tonoDetalle={vencenOk && vencenOk.vencidas > 0 ? "error" : "success"}
+          tono={vencenOk && vencenOk.vencidas > 0 ? "error" : "warning"}
+        />
+        <TarjetaKpi
+          etiqueta="Avisos pendientes"
+          valor={String(notificaciones)}
+          icono="campana"
+          detalle={
+            urgentes > 0
+              ? `${urgentes} ${urgentes === 1 ? "urgente" : "urgentes"}`
+              : notificaciones > 0
+                ? "Requieren atención"
+                : "Todo al día"
+          }
+          tonoDetalle={urgentes > 0 ? "error" : notificaciones > 0 ? "warning" : "success"}
+          tono={urgentes > 0 ? "error" : notificaciones > 0 ? "warning" : "success"}
+        />
+        <TarjetaKpi
+          etiqueta="Completadas (4 sem)"
+          valor={estadisticas ? String(estadisticas.total) : "—"}
+          icono="check-circulo"
+          detalle="Tareas terminadas"
+          tonoDetalle="success"
+          tono="success"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3 [&>*]:min-w-0">
+        <div className="min-w-0 xl:col-span-2">
+          <BloqueReuniones reuniones={reuniones} error={reunionesError} />
+        </div>
+        {tareasError ? (
+          <BloqueTareasError mensaje={tareasError} />
+        ) : tareas ? (
+          <BloqueTareas recurrentes={tareas.recurrentes} puntuales={tareas.puntuales} />
+        ) : null}
+
+        <div className="min-w-0 xl:col-span-2">
+          <BloqueVencenPronto resultado={vencen} />
+        </div>
+        <div className="min-w-0">
+          <BloquePendientes resultado={pendientes} />
         </div>
 
-        {/* Fila 2: proyectos + estadisticas + notificaciones */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="min-w-0 xl:col-span-2">
           {proyectosError ? (
             <Tarjeta titulo="Proyectos">
               <EstadoError mensaje={proyectosError} />
             </Tarjeta>
-          ) : proyectos !== null ? (
+          ) : proyectos ? (
             <BloqueProyectos proyectos={proyectos} />
-          ) : (
-            <Tarjeta titulo="Proyectos">
-              <div className="skeleton h-24 w-full" />
-            </Tarjeta>
-          )}
-
-          {estadisticasError ? (
-            <Tarjeta titulo="Estadísticas">
-              <EstadoError mensaje={estadisticasError} />
-            </Tarjeta>
-          ) : estadisticas !== null ? (
-            <BloqueEstadisticas
-              datosSemana={estadisticas.datosSemana}
-              datosProyecto={estadisticas.datosProyecto}
-              total={estadisticas.total}
-            />
-          ) : (
-            <Tarjeta titulo="Estadísticas">
-              <div className="skeleton h-24 w-full" />
-            </Tarjeta>
-          )}
-
-          <BloqueNotificaciones cantidad={notificaciones} />
+          ) : null}
         </div>
+        {estadisticasError ? (
+          <Tarjeta titulo="Estadísticas">
+            <EstadoError mensaje={estadisticasError} />
+          </Tarjeta>
+        ) : estadisticas ? (
+          <BloqueEstadisticas datosSemana={estadisticas.datosSemana} total={estadisticas.total} />
+        ) : null}
       </div>
     </>
-  );
-}
-
-// Wrapper para que el bloque de reuniones funcione como async server component
-async function BloqueReunionesWrapper({
-  reuniones,
-}: {
-  reuniones: {
-    idExterno: string;
-    titulo: string;
-    descripcion?: string;
-    inicio: Date;
-    fin: Date;
-    enlaceReunion?: string;
-  }[];
-}) {
-  if (reuniones.length === 0) {
-    return (
-      <Tarjeta titulo="Reuniones de hoy">
-        <EstadoVacio
-          icono="calendario"
-          titulo="Sin reuniones"
-          descripcion="No hay reuniones registradas para hoy."
-          accion={
-            <Link href="/calendario" className="btn btn-ghost btn-sm">
-              Ir al calendario
-            </Link>
-          }
-        />
-      </Tarjeta>
-    );
-  }
-  return (
-    <Tarjeta
-      titulo="Reuniones de hoy"
-      accion={
-        <Link href="/calendario" className="btn btn-ghost btn-xs">
-          Ver calendario
-        </Link>
-      }
-    >
-      <ul className="space-y-2">
-        {reuniones.map((r) => (
-          <li key={r.idExterno} className="flex items-start gap-3 text-sm">
-            <span className="text-base-content/60 mt-0.5 shrink-0 font-mono text-xs">
-              {formatearHora(r.inicio)}
-            </span>
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate font-medium">{r.titulo}</span>
-              {r.enlaceReunion && (
-                <a
-                  href={r.enlaceReunion}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link link-primary text-xs"
-                >
-                  Unirse
-                </a>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Tarjeta>
   );
 }

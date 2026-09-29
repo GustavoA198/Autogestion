@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BotonEnlace } from "@/componentes/enlace";
 import { EstadoVacio } from "@/componentes/estado-vacio";
 
 export default function CredencialNoEncontrada() {
@@ -7,11 +7,7 @@ export default function CredencialNoEncontrada() {
       icono="llave"
       titulo="Credencial no encontrada"
       descripcion="La credencial no existe o ya fue eliminada."
-      accion={
-        <Link href="/credenciales" className="btn btn-primary">
-          Volver a credenciales
-        </Link>
-      }
+      accion={<BotonEnlace href="/credenciales">Volver a credenciales</BotonEnlace>}
     />
   );
 }

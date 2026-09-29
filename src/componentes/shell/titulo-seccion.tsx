@@ -9,16 +9,17 @@ type Propiedades = {
 
 export function TituloSeccion({ modulo, titulo, descripcion, accion }: Propiedades) {
   return (
-    <header className="flex flex-col gap-4 pb-6 md:flex-row md:items-end md:justify-between">
-      <div className="space-y-2">
-        <p className="text-primary flex items-center gap-2 text-xs tracking-widest uppercase">
-          <span className="bg-primary inline-flex h-2 w-2 rounded-full" aria-hidden="true" />
-          {modulo}
-        </p>
-        <h1 className="text-2xl leading-tight font-semibold md:text-3xl">{titulo}</h1>
-        {descripcion ? <p className="max-w-2xl text-sm opacity-70">{descripcion}</p> : null}
+    <header className="flex flex-col gap-4 pb-6 md:flex-row md:flex-wrap md:items-end md:justify-between">
+      <div className="min-w-0 flex-1 space-y-1.5 md:basis-72">
+        <p className="text-primary text-xs font-bold tracking-[0.1em] uppercase">{modulo}</p>
+        <h1 className="text-2xl font-extrabold tracking-tight first-letter:uppercase md:text-[2rem] md:leading-10">
+          {titulo}
+        </h1>
+        {descripcion ? (
+          <p className="text-suave max-w-2xl text-sm md:text-[0.9375rem]">{descripcion}</p>
+        ) : null}
       </div>
-      {accion ? <div className="flex items-center gap-2">{accion}</div> : null}
+      {accion ? <div className="flex shrink-0 flex-wrap items-center gap-2">{accion}</div> : null}
     </header>
   );
 }

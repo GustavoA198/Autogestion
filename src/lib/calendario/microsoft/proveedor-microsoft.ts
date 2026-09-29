@@ -9,10 +9,59 @@ import type {
   EventoCalendario,
   ProveedorCalendario,
 } from "../proveedor";
-import { ErrorCalendario as ErrorCalendarioBase } from "../proveedor";
+import { enlaceSeguro, ErrorCalendario as ErrorCalendarioBase } from "../proveedor";
 
 const SCOPES = ["Calendars.ReadWrite", "offline_access"];
 const USUARIO_ID = "unico";
+
+type EventoGraph = {
+  id?: string;
+  subject?: string;
+  bodyPreview?: string;
+  start?: { dateTime?: string };
+  end?: { dateTime?: string };
+  isAllDay?: boolean;
+  isCancelled?: boolean;
+  webLink?: string;
+  location?: { displayName?: string };
+  organizer?: { emailAddress?: { name?: string; address?: string } };
+  attendees?: {
+    type?: string;
+    status?: { response?: string };
+    emailAddress?: { name?: string; address?: string };
+  }[];
+  onlineMeeting?: { joinUrl?: string } | null;
+};
+
+// Graph devuelve fechas UTC sin sufijo; se agrega Z para interpretarlas como UTC
+function fechaGraph(valor: string | undefined): Date {
+  if (!valor) return new Date();
+  return new Date(/[zZ]|[+-]dd:dd$/.test(valor) ? valor : `${valor}Z`);
+}
+
+// Convierte un evento crudo de Graph al formato común de la app
+export function mapearEventoGraph(evento: EventoGraph): EventoCalendario {
+  const org = evento.organizer?.emailAddress;
+  return {
+    idExterno: evento.id ?? "",
+    titulo: evento.subject ?? "Sin título",
+    descripcion: evento.bodyPreview || undefined,
+    inicio: fechaGraph(evento.start?.dateTime),
+    fin: fechaGraph(evento.end?.dateTime),
+    enlaceReunion: enlaceSeguro(evento.onlineMeeting?.joinUrl),
+    enlaceEvento: enlaceSeguro(evento.webLink),
+    ubicacion: evento.location?.displayName || undefined,
+    organizador: org?.name ?? org?.address ?? undefined,
+    estado: evento.isCancelled ? "cancelled" : "confirmed",
+    diaCompleto: Boolean(evento.isAllDay),
+    invitados: (evento.attendees ?? []).map((i) => ({
+      nombre: i.emailAddress?.name,
+      email: i.emailAddress?.address,
+      respuesta: i.status?.response,
+      opcional: i.type === "optional",
+    })),
+  };
+}
 
 function descifrarToken(cifrado: string): string {
   return descifrar(cifrado);
@@ -40,8 +89,7 @@ export class MicrosoftProveedor implements ProveedorCalendario {
       MICROSOFT_REDIRECT_URI,
     } = leerEntornoCalendario();
 
-    // Simula un cliente OAuth sencillo sin usar OAuth2 explícito
-    // El token se pasa directo para que GraphClient lo use en cada request
+    // Cliente OAuth sencillo: el token se pasa directo para que GraphClient lo use en cada request
     const client = Client.init({
       authProvider: (done) => {
         if (accessToken) {
@@ -223,31 +271,18 @@ export class MicrosoftProveedor implements ProveedorCalendario {
 
       const respuesta = await this.client
         .api("/me/events")
-        .select("id,subject,body,start,end,onlineMeeting")
+        .header("Prefer", 'outlook.timezone="UTC"')
+        .select(
+          "id,subject,bodyPreview,start,end,isAllDay,isCancelled,webLink,location,organizer,attendees,onlineMeeting",
+        )
         .query({
-          $filter: `start/ge '${fechaInicio.toISOString()}' and end/le '${fechaFin.toISOString()}'`,
+          $filter: `start/dateTime ge '${fechaInicio.toISOString()}' and end/dateTime le '${fechaFin.toISOString()}'`,
           $top: "250",
           $orderby: "start/dateTime asc",
         })
         .get();
 
-      return (
-        (respuesta.value ?? []) as {
-          id: string;
-          subject: string;
-          body: { preview: string };
-          start: { dateTime: string; timeZone: string };
-          end: { dateTime: string; timeZone: string };
-          onlineMeeting: { joinUrl: string } | null;
-        }[]
-      ).map((evento) => ({
-        idExterno: evento.id ?? "",
-        titulo: evento.subject ?? "Sin título",
-        descripcion: evento.body?.preview ?? undefined,
-        inicio: new Date(evento.start?.dateTime ?? Date.now()),
-        fin: new Date(evento.end?.dateTime ?? Date.now()),
-        enlaceReunion: evento.onlineMeeting?.joinUrl ?? undefined,
-      }));
+      return ((respuesta.value ?? []) as EventoGraph[]).map(mapearEventoGraph);
     } catch (e) {
       throw this.buildError(e);
     }
@@ -273,14 +308,7 @@ export class MicrosoftProveedor implements ProveedorCalendario {
         onlineMeetingProvider: "teamsForBusiness",
       } as Record<string, unknown>);
 
-      return {
-        idExterno: creado.id ?? "",
-        titulo: creado.subject ?? datos.titulo,
-        descripcion: creado.body?.preview ?? undefined,
-        inicio: new Date(creado.start?.dateTime ?? datos.inicio),
-        fin: new Date(creado.end?.dateTime ?? datos.fin),
-        enlaceReunion: creado.onlineMeeting?.joinUrl ?? undefined,
-      };
+      return mapearEventoGraph(creado as EventoGraph);
     } catch (e) {
       throw this.buildError(e);
     }

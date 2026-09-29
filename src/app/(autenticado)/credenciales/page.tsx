@@ -1,5 +1,7 @@
-import Link from "next/link";
+import { BarraFiltros } from "@/componentes/barra-filtros";
+import { BotonEnlace, Enlace } from "@/componentes/enlace";
 import { EstadoVacio } from "@/componentes/estado-vacio";
+import { Icono } from "@/componentes/icono";
 import { Insignia } from "@/componentes/insignia";
 import { Selector } from "@/componentes/selector";
 import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
@@ -10,7 +12,6 @@ import { listarProyectos } from "@/lib/proyectos/operaciones";
 import { tiempoRelativo } from "@/lib/tiempo";
 import { SecretoCredencial } from "./secreto-credencial";
 
-export const metadata = { title: "Credenciales · Autogestión" };
 export const dynamic = "force-dynamic";
 
 function primero(valor: string | string[] | undefined): string | undefined {
@@ -30,9 +31,10 @@ export default async function Credenciales({ searchParams }: PageProps<"/credenc
     listarProyectos(),
   ]);
   const botonCrear = (
-    <Link href="/credenciales/nueva" className="btn btn-primary">
+    <BotonEnlace href="/credenciales/nueva">
+      <Icono nombre="mas" tamano={16} />
       Nueva credencial
-    </Link>
+    </BotonEnlace>
   );
   // Sin filtros ni registros aún no hay nada que filtrar
   const bovedaVacia = credenciales.length === 0 && !hayFiltros;
@@ -53,8 +55,12 @@ export default async function Credenciales({ searchParams }: PageProps<"/credenc
           accion={botonCrear}
         />
       ) : (
-        <div className="space-y-4">
-          <form method="get" className="flex flex-wrap items-end gap-3" aria-label="Filtros">
+        <div className="space-y-5">
+          <BarraFiltros
+            etiqueta="Filtros de credenciales"
+            hayFiltros={hayFiltros}
+            rutaLimpiar="/credenciales"
+          >
             <Selector etiqueta="Categoría" name="categoria" defaultValue={filtroCategoria ?? ""}>
               <option value="">Todas</option>
               {Object.entries(CATEGORIAS).map(([valor, etiqueta]) => (
@@ -72,15 +78,7 @@ export default async function Credenciales({ searchParams }: PageProps<"/credenc
                 </option>
               ))}
             </Selector>
-            <button type="submit" className="btn btn-outline">
-              Filtrar
-            </button>
-            {hayFiltros ? (
-              <Link href="/credenciales" className="btn btn-ghost">
-                Limpiar filtros
-              </Link>
-            ) : null}
-          </form>
+          </BarraFiltros>
           {credenciales.length === 0 ? (
             <EstadoVacio
               icono="llave"
@@ -88,44 +86,70 @@ export default async function Credenciales({ searchParams }: PageProps<"/credenc
               descripcion="Prueba con otra categoría o alcance, o limpia los filtros."
             />
           ) : (
-            <Tabla aria-label="Listado de credenciales">
+            <Tabla apilada="ancha" aria-label="Listado de credenciales">
               <thead>
                 <tr>
                   <th scope="col">Nombre</th>
-                  <th scope="col">Categoría</th>
+                  <th scope="col" className="xl:max-2xl:hidden">
+                    Categoría
+                  </th>
                   <th scope="col">Usuario</th>
                   <th scope="col">Alcance</th>
                   <th scope="col">Secreto</th>
-                  <th scope="col">Actualizado</th>
+                  <th scope="col" className="xl:max-2xl:hidden">
+                    Actualizado
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {credenciales.map((credencial) => (
                   <tr key={credencial.id}>
-                    <th scope="row" className="font-medium">
-                      <Link href={`/credenciales/${credencial.id}`} className="link link-hover">
+                    <th scope="row" className="font-bold">
+                      <Enlace
+                        href={`/credenciales/${credencial.id}`}
+                        discreto
+                        title={credencial.nombre}
+                        className="block max-w-56 truncate"
+                      >
                         {credencial.nombre}
-                      </Link>
+                      </Enlace>
                     </th>
-                    <td>
+                    <td data-etiqueta="Categoría" className="xl:max-2xl:hidden">
                       <Insignia tono="info" contorno>
                         {CATEGORIAS[credencial.categoria]}
                       </Insignia>
                     </td>
-                    <td>{credencial.usuario ?? "—"}</td>
-                    <td>
+                    <td data-etiqueta="Usuario" className="font-mono text-sm">
+                      <span
+                        className="block max-w-40 truncate"
+                        title={credencial.usuario ?? undefined}
+                      >
+                        {credencial.usuario ?? "—"}
+                      </span>
+                    </td>
+                    <td data-etiqueta="Alcance">
                       {credencial.global ? (
                         <Insignia tono="primary">Global</Insignia>
                       ) : credencial.proyectos.length > 0 ? (
-                        credencial.proyectos.map(({ proyecto }) => proyecto.nombre).join(", ")
+                        <span
+                          className="block max-w-48 truncate"
+                          title={credencial.proyectos
+                            .map(({ proyecto }) => proyecto.nombre)
+                            .join(", ")}
+                        >
+                          {credencial.proyectos.map(({ proyecto }) => proyecto.nombre).join(", ")}
+                        </span>
                       ) : (
                         "—"
                       )}
                     </td>
-                    <td>
+                    <td data-etiqueta="Secreto">
                       <SecretoCredencial id={credencial.id} nombre={credencial.nombre} />
                     </td>
-                    <td className="whitespace-nowrap">
+                    <td
+                      data-etiqueta="Actualizado"
+                      className="text-suave font-mono text-xs whitespace-nowrap xl:max-2xl:hidden"
+                    >
                       {tiempoRelativo(credencial.secretoActualizadoEn)}
                     </td>
                   </tr>

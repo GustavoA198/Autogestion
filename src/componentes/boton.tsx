@@ -23,6 +23,17 @@ type Propiedades = ButtonHTMLAttributes<HTMLButtonElement> & {
   cargando?: boolean;
 };
 
+// Clases compartidas por botones y enlaces con aspecto de botón
+export function clasesBoton(
+  variante: Variante = "primario",
+  tamano: Tamano = "mediano",
+  className?: string,
+): string {
+  return ["btn", VARIANTES[variante], TAMANOS[tamano], className].filter(Boolean).join(" ");
+}
+
+export type { Variante as VarianteBoton, Tamano as TamanoBoton };
+
 export function Boton({
   variante = "primario",
   tamano = "mediano",
@@ -33,7 +44,7 @@ export function Boton({
   children,
   ...resto
 }: Propiedades) {
-  const clases = ["btn", VARIANTES[variante], TAMANOS[tamano], className].filter(Boolean).join(" ");
+  const clases = clasesBoton(variante, tamano, className);
   return (
     <button
       type={type}

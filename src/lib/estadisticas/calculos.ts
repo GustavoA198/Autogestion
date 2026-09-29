@@ -42,15 +42,16 @@ export function fechaInicioSemana(fecha: Date, zona: string): Date {
   return result;
 }
 
-// Agrupar completadas por semana ISO (lunes-domingo)
+// Agrupar completadas por semana ISO (lunes-domingo); la fecha es pura (medianoche UTC), no depende de la zona
 export function agruparPorSemana(
   completadas: TareaCompletadaConTarea[],
   zona: string,
 ): { semana: string; cantidad: number }[] {
+  void zona;
   const mapa = new Map<string, number>();
   for (const c of completadas) {
     const fecha = new Date(c.fecha);
-    const inicio = fechaInicioSemana(fecha, zona);
+    const inicio = fechaInicioSemana(fecha, "UTC");
     const clave = inicio.toISOString().slice(0, 10);
     mapa.set(clave, (mapa.get(clave) ?? 0) + 1);
   }

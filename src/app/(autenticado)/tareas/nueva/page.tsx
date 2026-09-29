@@ -1,26 +1,17 @@
 import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
-import { listarProyectos } from "@/lib/proyectos/operaciones";
-import { FormularioTarea } from "../formulario-tarea";
-import { accionCrearTarea } from "../acciones";
+import { FormularioNuevaTarea } from "./formulario-nueva";
 
-export const metadata = { title: "Nueva tarea · Autogestión" };
-
-export default async function NuevaTarea() {
-  const proyectos = await listarProyectos();
+export default async function NuevaTarea({ searchParams }: PageProps<"/tareas/nueva">) {
+  const consulta = await searchParams;
 
   return (
     <>
       <TituloSeccion
         modulo="Autogestión"
         titulo="Nueva tarea"
-        descripcion="Crea una tarea diaria, semanal, mensual o puntual."
+        descripcion="Crea una tarea diaria, semanal, mensual o puntual, con estado, fechas y subtareas."
       />
-      <FormularioTarea
-        accion={accionCrearTarea}
-        proyectos={proyectos}
-        textoEnviar="Crear tarea"
-        rutaCancelar="/tareas"
-      />
+      <FormularioNuevaTarea consulta={consulta} />
     </>
   );
 }

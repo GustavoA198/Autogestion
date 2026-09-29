@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Link from "next/link";
-import { Boton } from "@/componentes/boton";
-import { Confirmacion } from "@/componentes/confirmacion";
+import { Enlace } from "@/componentes/enlace";
+import { BotonEliminar } from "@/componentes/boton-eliminar";
+import { Icono } from "@/componentes/icono";
+import { Insignia } from "@/componentes/insignia";
+import { PROXIMO_PASO_SIN_DEFINIR } from "@/lib/notas/constantes";
+import { formatearMinutos } from "@/lib/notas/formato";
 import { accionEliminarNota } from "./acciones";
 import { tiempoRelativo } from "@/lib/tiempo";
 
@@ -11,42 +13,56 @@ export function NotaFila({
   notaId,
   proyectoId,
   texto,
+  proximoPaso,
+  minutos,
   actualizadoEn,
 }: {
   notaId: string;
   proyectoId: string;
   texto: string;
+  proximoPaso: string;
+  minutos: number | null;
   actualizadoEn: Date;
 }) {
-  const [abierto, setAbierto] = useState(false);
-  const [pendiente, iniciar] = useTransition();
-
   return (
-    <li className="py-3">
-      <div className="flex items-start justify-between gap-2">
-        <Link
+    <li className="tarjeta-fila flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="min-w-0 space-y-1">
+        <Enlace
           href={`/proyectos/${proyectoId}/notas/${notaId}`}
-          className="link link-hover font-medium"
+          discreto
+          title={texto}
+          className="line-clamp-2 font-bold break-words"
         >
-          {texto.length > 80 ? texto.slice(0, 80) + "…" : texto}
-        </Link>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="text-xs opacity-60">{tiempoRelativo(actualizadoEn)}</span>
-          <Boton variante="fantasma" tamano="pequeno" onClick={() => setAbierto(true)}>
-            Eliminar
-          </Boton>
-          <Confirmacion
-            abierto={abierto}
-            alCancelar={() => setAbierto(false)}
-            alConfirmar={() => iniciar(() => accionEliminarNota(notaId, proyectoId))}
-            titulo="Eliminar entrada"
-            mensaje="Se eliminará esta entrada de la bitácora. Esta acción no se puede deshacer."
-            textoConfirmar="Eliminar entrada"
-            cargando={pendiente}
-            destructivo
-          />
-        </div>
+          {texto.length > 120 ? texto.slice(0, 120) + "…" : texto}
+        </Enlace>
+        {proximoPaso !== PROXIMO_PASO_SIN_DEFINIR ? (
+          <p className="text-suave flex items-start gap-1.5 text-sm">
+            <Icono nombre="flecha-derecha" tamano={14} className="text-primary mt-1 shrink-0" />
+            <span className="min-w-0 truncate" title={`Próximo paso: ${proximoPaso}`}>
+              <span className="font-bold">Próximo paso:</span> {proximoPaso}
+            </span>
+          </p>
+        ) : null}
+        <p className="text-tenue flex flex-wrap items-center gap-x-2 text-xs">
+          <span>Actualizada {tiempoRelativo(actualizadoEn)}</span>
+          {minutos ? (
+            <Insignia tono="ghost" className="gap-1">
+              <Icono nombre="reloj" tamano={12} />
+              {formatearMinutos(minutos)}
+            </Insignia>
+          ) : null}
+        </p>
       </div>
+      <BotonEliminar
+        variante="fantasma"
+        tamano="pequeno"
+        alConfirmar={() => accionEliminarNota(notaId, proyectoId)}
+        titulo="Eliminar entrada"
+        mensaje="Se eliminará esta entrada de la bitácora. Esta acción no se puede deshacer."
+        textoConfirmar="Eliminar entrada"
+        etiquetaAccesible="Eliminar entrada"
+        texto="Eliminar"
+      />
     </li>
   );
 }

@@ -5,17 +5,22 @@ import { exigirSesion } from "@/lib/auth/sesion";
 import { obtenerGoogleProveedor } from "@/lib/calendario/google/proveedor-google";
 import { obtenerMicrosoftProveedor } from "@/lib/calendario/microsoft/proveedor-microsoft";
 import {
-  cuentaEstaConectada,
   desconectarCalendario,
   guardarReunion,
-  listarReunionesLocales,
+  listarReunionesEnRango,
   obtenerCuentaCalendario,
-  sincronizarReuniones,
+  sincronizarCalendario,
+  type OrigenSincronizacion,
+  type ReunionDetalle,
 } from "@/lib/calendario/operaciones";
-import type { ErrorCalendario, ProveedorCalendario } from "@/lib/calendario/proveedor";
+import { validarRangoConsulta } from "@/lib/calendario/rango";
+import { validarRangoClaves, type EventoTarea } from "@/lib/calendario/tareas";
+import { listarTareasEnRango } from "@/lib/calendario/tareas-rango";
 import { ErrorCalendario as ErrorCalendarioBase } from "@/lib/calendario/proveedor";
 
 export type EstadoReunion = {
+  // Verdadero cuando la reunión se creó; la UI cierra el formulario y refresca el rango
+  creada?: boolean;
   errores?: { mensaje?: string };
   valores?: { titulo?: string; descripcion?: string; inicio?: string; fin?: string };
 };
@@ -44,15 +49,22 @@ export async function accionCrearReunion(
 ): Promise<EstadoReunion> {
   await exigirSesion();
   const { titulo, descripcion, inicio, fin, proveedor } = leerCampos(formulario);
+  // Los valores enviados se devuelven con cada error para no perder lo que el usuario escribió
+  const valores = {
+    titulo: typeof titulo === "string" ? titulo : "",
+    descripcion: typeof descripcion === "string" ? descripcion : "",
+    inicio: typeof inicio === "string" ? inicio : "",
+    fin: typeof fin === "string" ? fin : "",
+  };
 
   if (!titulo || typeof titulo !== "string" || titulo.trim() === "") {
-    return { errores: { mensaje: "El título es obligatorio." } };
+    return { errores: { mensaje: "El título es obligatorio." }, valores };
   }
   if (!inicio || typeof inicio !== "string") {
-    return { errores: { mensaje: "La fecha de inicio es obligatoria." } };
+    return { errores: { mensaje: "La fecha de inicio es obligatoria." }, valores };
   }
   if (!fin || typeof fin !== "string") {
-    return { errores: { mensaje: "La fecha de fin es obligatoria." } };
+    return { errores: { mensaje: "La fecha de fin es obligatoria." }, valores };
   }
 
   const tipoProveedor = proveedor === "MICROSOFT" ? "MICROSOFT" : "GOOGLE";
@@ -60,10 +72,10 @@ export async function accionCrearReunion(
   const fechaInicio = new Date(inicio);
   const fechaFin = new Date(fin);
   if (isNaN(fechaInicio.getTime()) || isNaN(fechaFin.getTime())) {
-    return { errores: { mensaje: "Las fechas no son válidas." } };
+    return { errores: { mensaje: "Las fechas no son válidas." }, valores };
   }
   if (fechaFin <= fechaInicio) {
-    return { errores: { mensaje: "La fecha de fin debe ser posterior a la de inicio." } };
+    return { errores: { mensaje: "La fecha de fin debe ser posterior a la de inicio." }, valores };
   }
 
   try {
@@ -76,6 +88,7 @@ export async function accionCrearReunion(
               ? "Google Calendar no está configurado. Agrega las variables en .env."
               : "Microsoft Calendar no está configurado. Agrega las variables en .env.",
         },
+        valores,
       };
     }
     const cuentaDb = await cuenta;
@@ -87,6 +100,7 @@ export async function accionCrearReunion(
               ? "Cuenta de Google Calendar no conectada."
               : "Cuenta de Microsoft Calendar no conectada.",
         },
+        valores,
       };
     }
 
@@ -98,12 +112,12 @@ export async function accionCrearReunion(
     });
     await guardarReunion(tipoProveedor, evento, cuentaDb.id);
     revalidatePath("/calendario");
-    return {};
+    return { creada: true };
   } catch (e) {
     const err = e instanceof ErrorCalendarioBase ? e : null;
     return {
       errores: { mensaje: err?.message ?? "Error al crear la reunión." },
-      valores: { titulo: String(titulo), descripcion: String(descripcion ?? ""), inicio, fin },
+      valores,
     };
   }
 }
@@ -119,11 +133,22 @@ export async function accionDesconectarCalendario(
 
 // Sincroniza reuniones desde el calendario seleccionado
 export type ResultadoSincronizacion =
-  | { ok: true; cantidad: number }
+  | {
+      ok: true;
+      cantidad: number;
+      // Verdadero si se guardó algo nuevo; la UI recarga el rango solo en ese caso
+      huboCambios: boolean;
+      // Verdadero si el límite de frecuencia evitó consultar al proveedor
+      omitida?: boolean;
+      // Fecha ISO de la última sincronización de la cuenta
+      ultimaSincronizacion: string | null;
+    }
   | { ok: false; codigo: ErrorCalendario["codigo"]; mensaje: string };
 
+// El origen "auto" lo usa el disparo automático: respeta el límite de frecuencia y no revalida la página
 export async function accionSincronizarCalendario(
   proveedor: "GOOGLE" | "MICROSOFT" = "GOOGLE",
+  origen: OrigenSincronizacion = "manual",
 ): Promise<ResultadoSincronizacion> {
   await exigirSesion();
   const prov = proveedor === "GOOGLE" ? obtenerGoogleProveedor() : obtenerMicrosoftProveedor();
@@ -138,39 +163,105 @@ export async function accionSincronizarCalendario(
     };
   }
   try {
-    const cantidad = await sincronizarReuniones(prov, proveedor);
-    revalidatePath("/calendario");
-    return { ok: true, cantidad };
+    const modo = origen === "auto" ? "auto" : "manual";
+    const resultado = await sincronizarCalendario(prov, proveedor, modo);
+    // Revalidar dentro de una acción vuelve a renderizar la página actual, así que solo se hace en el modo manual
+    if (modo === "manual") revalidatePath("/calendario");
+    return {
+      ok: true,
+      cantidad: resultado.cantidad,
+      huboCambios: resultado.huboCambios,
+      omitida: resultado.omitida,
+      ultimaSincronizacion: resultado.ultimaSincronizacion?.toISOString() ?? null,
+    };
   } catch (e) {
     const err = e instanceof ErrorCalendarioBase ? e : null;
+    // Sin cuenta conectada el disparo automático es esperable y no merece registro
+    if (!(origen === "auto" && err?.codigo === "no-configurado")) {
+      // Solo la última línea: los errores de Prisma vuelcan el evento completo
+      const detalle = e instanceof Error ? (e.message.trim().split("\n").pop() ?? e.message) : e;
+      console.error("Error al sincronizar calendario:", proveedor, detalle);
+    }
     return {
       ok: false,
       codigo: err?.codigo ?? "desconocido",
-      mensaje: err?.message ?? "Error al sincronizar.",
+      mensaje: err?.message ?? (e instanceof Error ? e.message : "Error al sincronizar."),
     };
   }
 }
 
-// Devuelve reuniones locales para la UI
-export async function obtenerReunionesLocales(fechaInicio?: Date, fechaFin?: Date) {
+// Reuniones de la BD local que se solapan con [desde, hasta); las fechas llegan como ISO
+export type ResultadoReunionesRango =
+  { ok: true; reuniones: ReunionDetalle[] } | { ok: false; mensaje: string };
+
+export async function obtenerReunionesEnRango(
+  desde: string,
+  hasta: string,
+): Promise<ResultadoReunionesRango> {
   await exigirSesion();
-  return listarReunionesLocales(fechaInicio, fechaFin);
+  const rango = validarRangoConsulta(desde, hasta);
+  if (!rango) return { ok: false, mensaje: "El rango de fechas no es válido." };
+  try {
+    return { ok: true, reuniones: await listarReunionesEnRango(rango.desde, rango.hasta) };
+  } catch (e) {
+    console.error("Error al listar reuniones del rango:", e instanceof Error ? e.message : e);
+    return { ok: false, mensaje: "No se pudieron cargar las reuniones." };
+  }
+}
+
+// Tareas abiertas con vencimiento en [desde, hasta); las fechas llegan como AAAA-MM-DD
+export type ResultadoTareasRango =
+  { ok: true; tareas: EventoTarea[] } | { ok: false; mensaje: string };
+
+export async function obtenerTareasEnRango(
+  desde: string,
+  hasta: string,
+  incluirVencidas: boolean,
+): Promise<ResultadoTareasRango> {
+  await exigirSesion();
+  const rango = validarRangoClaves(desde, hasta);
+  if (!rango) return { ok: false, mensaje: "El rango de fechas no es válido." };
+  try {
+    return {
+      ok: true,
+      tareas: await listarTareasEnRango(rango.desde, rango.hasta, incluirVencidas === true),
+    };
+  } catch (e) {
+    console.error("Error al listar tareas del rango:", e instanceof Error ? e.message : e);
+    return { ok: false, mensaje: "No se pudieron cargar las tareas." };
+  }
 }
 
 // Verifica el estado de las conexiones de ambos calendarios
+type EstadoConexion = {
+  conectado: boolean;
+  configurado: boolean;
+  // Fecha ISO de la última sincronización correcta de la cuenta
+  ultimaSincronizacion: string | null;
+};
+
+// Lee la cuenta una sola vez para saber si está conectada y cuándo se sincronizó por última vez
+async function estadoDeProveedor(
+  tipo: "GOOGLE" | "MICROSOFT",
+  configurado: boolean,
+): Promise<EstadoConexion> {
+  if (!configurado) return { configurado, conectado: false, ultimaSincronizacion: null };
+  const cuenta = await obtenerCuentaCalendario(tipo);
+  return {
+    configurado,
+    conectado: Boolean(cuenta?.refreshTokenCifrado),
+    ultimaSincronizacion: cuenta?.ultimaSincronizacion?.toISOString() ?? null,
+  };
+}
+
 export async function obtenerEstadoCalendario(): Promise<{
-  google: { conectado: boolean; configurado: boolean };
-  microsoft: { conectado: boolean; configurado: boolean };
+  google: EstadoConexion;
+  microsoft: EstadoConexion;
 }> {
   await exigirSesion();
-  const googleProveedor = obtenerGoogleProveedor();
-  const microsoftProveedor = obtenerMicrosoftProveedor();
-  const googleConfigurado = googleProveedor.estaConfigurado();
-  const microsoftConfigurado = microsoftProveedor.estaConfigurado();
-  const googleConectado = googleConfigurado ? await cuentaEstaConectada("GOOGLE") : false;
-  const microsoftConectado = microsoftConfigurado ? await cuentaEstaConectada("MICROSOFT") : false;
-  return {
-    google: { configurado: googleConfigurado, conectado: googleConectado },
-    microsoft: { configurado: microsoftConfigurado, conectado: microsoftConectado },
-  };
+  const [google, microsoft] = await Promise.all([
+    estadoDeProveedor("GOOGLE", obtenerGoogleProveedor().estaConfigurado()),
+    estadoDeProveedor("MICROSOFT", obtenerMicrosoftProveedor().estaConfigurado()),
+  ]);
+  return { google, microsoft };
 }

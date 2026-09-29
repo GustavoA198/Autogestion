@@ -1,57 +1,181 @@
 @import "tailwindcss";
+@import "./tarjetas.css";
+@import "./modales.css";
 @plugin "daisyui";
+
+/* Tema claro: lienzo gris azulado, tarjetas blancas y lima apagado como relleno de marca */
 @plugin "daisyui/theme" {
-  name: "autogestion-dark-lime";
+  name: "autogestion-claro";
   default: true;
-  prefersdark: true;
-  color-scheme: dark;
+  color-scheme: light;
 
-  --color-primary: #d6ff3d;
-  --color-primary-content: #0b0f1a;
-  --color-secondary: #3b82f6;
-  --color-secondary-content: #0b0f1a;
-  --color-accent: #22c55e;
-  --color-accent-content: #0b0f1a;
-  --color-neutral: #1f2937;
-  --color-neutral-content: #f4f4f5;
-  --color-base-100: #0b0f1a;
-  --color-base-200: #111827;
-  --color-base-300: #1f2937;
-  --color-base-content: #f4f4f5;
-  --color-info: #3b82f6;
-  --color-info-content: #0b0f1a;
-  --color-success: #22c55e;
-  --color-success-content: #0b0f1a;
-  --color-warning: #f5b547;
-  --color-warning-content: #0b0f1a;
-  --color-error: #d946ef;
-  --color-error-content: #0b0f1a;
+  --color-base-100: #ffffff;
+  --color-base-200: #f4f6fa;
+  --color-base-300: #cdd3de;
+  --color-base-content: #101828;
+  --color-primary: #c6f03a;
+  --color-primary-content: #142000;
+  --color-secondary: #475467;
+  --color-secondary-content: #ffffff;
+  --color-accent: #0c6a80;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1d2939;
+  --color-neutral-content: #f2f4f7;
+  --color-info: #0369a1;
+  --color-info-content: #ffffff;
+  --color-success: #0a6e50;
+  --color-success-content: #ffffff;
+  --color-warning: #a5480a;
+  --color-warning-content: #ffffff;
+  --color-error: #b42318;
+  --color-error-content: #ffffff;
 
-  --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-selector: 9999px;
+  --radius-field: 0.75rem;
+  --radius-box: 1.25rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 1;
+  --depth: 0;
   --noise: 0;
+
+  --campo-borde: #7f8794;
+  --campo-fondo: #ffffff;
+  --linea-fuerte: #cbd2dc;
+  --linea-tarjeta: #cdd3de;
+  --texto-suave: #475467;
+  --texto-tenue: #5b6576;
+  --verde-texto: #3f6212;
+  --borde-primario: color-mix(in oklab, #3f6212 45%, transparent);
+  --contenido-marca: #ffffff;
+  --sidebar: #ffffff;
+  --fila-hundida: #f4f6fa;
+  --fondo-hover: #eceff5;
+  --panel-marca: #1a1c22;
+  --semaforo-amarillo: #7d6200;
+  --serie-violeta: #6d3fd1;
+  --serie-rosa: #b4245f;
+  --sombra-tarjeta: none;
+  --sombra-tarjeta-hover: none;
+  --sombra-1: none;
+  --sombra-2: 0 8px 16px -4px rgb(16 24 40 / 0.1), 0 2px 6px -2px rgb(16 24 40 / 0.06);
+  --sombra-3: 0 24px 48px -12px rgb(16 24 40 / 0.28);
+  --velo-modal: rgb(16 24 40 / 0.5);
+}
+
+/* Tema oscuro para el sistema: superficies escalonadas y lima como acento único */
+@plugin "daisyui/theme" {
+  name: "autogestion-oscuro";
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: #1e2027;
+  --color-base-200: #131418;
+  --color-base-300: #333743;
+  --color-base-content: #e6eaf2;
+  --color-primary: #c8f031;
+  --color-primary-content: #141c00;
+  --color-secondary: #a4abb8;
+  --color-secondary-content: #131418;
+  --color-accent: #38c7d6;
+  --color-accent-content: #04161a;
+  --color-neutral: #252832;
+  --color-neutral-content: #e6eaf2;
+  --color-info: #5bb6f5;
+  --color-info-content: #06131f;
+  --color-success: #4cc38a;
+  --color-success-content: #04160c;
+  --color-warning: #f5b454;
+  --color-warning-content: #1e1200;
+  --color-error: #f47c72;
+  --color-error-content: #1f0705;
+
+  --radius-selector: 9999px;
+  --radius-field: 0.75rem;
+  --radius-box: 1.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+
+  --campo-borde: #6b7385;
+  --campo-fondo: #17181c;
+  --linea-fuerte: #3d4250;
+  --linea-tarjeta: #333743;
+  --texto-suave: #a4abb8;
+  --texto-tenue: #8a92a0;
+  --verde-texto: #c8f031;
+  --borde-primario: transparent;
+  --contenido-marca: #141c00;
+  --sidebar: #1a1c22;
+  --fila-hundida: #17181c;
+  --fondo-hover: #252832;
+  --panel-marca: #1a1c22;
+  --semaforo-amarillo: #f2d24b;
+  --serie-violeta: #b39bff;
+  --serie-rosa: #ff8fb4;
+  --sombra-tarjeta: none;
+  --sombra-tarjeta-hover: none;
+  --sombra-1: none;
+  --sombra-2: 0 8px 20px -4px rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --sombra-3: 0 24px 56px -12px rgb(0 0 0 / 0.7);
+  --velo-modal: rgb(3 6 12 / 0.7);
 }
 
 @theme inline {
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-app), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-pill: 9999px;
+  --shadow-tarjeta: var(--sombra-tarjeta);
+  --shadow-flotante: var(--sombra-2);
+  --shadow-modal: var(--sombra-3);
+  --color-campo-borde: var(--campo-borde);
+  --color-linea-fuerte: var(--linea-fuerte);
+  --color-linea-tarjeta: var(--linea-tarjeta);
+  --color-suave: var(--texto-suave);
+  --color-tenue: var(--texto-tenue);
+  --color-panel-marca: var(--panel-marca);
+  --color-amarillo: var(--semaforo-amarillo);
+  --color-sidebar: var(--sidebar);
+  --color-hundida: var(--fila-hundida);
+  --color-hover: var(--fondo-hover);
+  --color-verde: var(--verde-texto);
 }
 
 @layer base {
   html {
-    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* La cabecera fija de 64 px no debe tapar lo enfocado con el teclado ni las anclas */
+    scroll-padding-top: 5rem;
   }
 
   body {
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    background-color: var(--color-base-200);
+    color: var(--color-base-content);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  code,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
   }
 
   .saltar-al-contenido:not(:focus):not(:focus-within) {
@@ -67,7 +191,21 @@
   }
 }
 
-/* Borde de campos con 3:1 mínimo (WCAG 1.4.11); fuera de las capas para vencer al 20% de DaisyUI y sin pisar el estado de error */
+/* Enlace de salto visible solo con foco, fijo para no desplazar el resto de la página */
+.saltar-al-contenido:is(:focus, :focus-within) {
+  position: fixed;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.75rem;
+  z-index: 100;
+}
+
+/* Fuera de las capas para vencer las reglas de foco de DaisyUI; el anillo usa el color de marca */
+*:focus-visible {
+  outline: 2px solid var(--verde-texto);
+  outline-offset: 2px;
+}
+
+/* Campos: borde con 3:1 mínimo (WCAG 1.4.11) y estado de foco con el color de marca */
 .input:not(.input-error),
 .select:not(.select-error),
 .textarea:not(.textarea-error),
@@ -81,13 +219,384 @@
   .checkbox-warning,
   .checkbox-error
 ) {
-  --input-color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+  --input-color: var(--campo-borde);
 }
 
-/* Fuera de las capas para que el foco visible no lo anule el menú de DaisyUI */
-*:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.checkbox:is(:checked, [aria-checked="true"], :indeterminate) {
+  --input-color: var(--verde-texto);
+  color: var(--contenido-marca);
+}
+
+.input:not(.input-error):focus-within,
+.select:not(.select-error):focus,
+.textarea:not(.textarea-error):focus {
+  --input-color: var(--verde-texto);
+}
+
+.input,
+.select,
+.textarea {
+  background-color: var(--campo-fondo);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--texto-tenue);
+  opacity: 1;
+}
+
+/* Campos deshabilitados: texto legible (3:1 mínimo) y fondo plano para distinguirlos de los activos */
+.input:is(:disabled, [disabled], :has(input:disabled)),
+.select:is(:disabled, [disabled]),
+.textarea:is(:disabled, [disabled]) {
+  color: var(--texto-tenue);
+  background-color: color-mix(in oklab, var(--color-base-content) 5%, var(--color-base-100));
+  border-color: var(--linea-fuerte);
+  --input-color: var(--linea-fuerte);
+}
+
+.checkbox {
+  --size: 1.25rem;
+  cursor: pointer;
+}
+
+/* Botones: planos, con sombra mínima solo en las variantes rellenas */
+.btn {
+  --fontsize: 0.875rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  transition-duration: 150ms;
+}
+
+/* Botón primario: lima con texto oscuro; en claro lleva borde oliva para que la forma no dependa solo del relleno */
+.btn-primary:not(
+  .btn-outline,
+  .btn-ghost,
+  .btn-soft,
+  .btn-link,
+  :disabled,
+  [aria-disabled="true"]
+) {
+  --btn-border: var(--borde-primario);
+}
+
+.btn-primary:is(.btn-outline, .btn-ghost, .btn-soft, .btn-link) {
+  --btn-fg: var(--verde-texto);
+  color: var(--verde-texto);
+}
+
+.btn.btn-sm {
+  --fontsize: 0.8125rem;
+}
+
+.btn.btn-xs {
+  --fontsize: 0.75rem;
+}
+
+.btn:is(
+    .btn-primary,
+    .btn-secondary,
+    .btn-accent,
+    .btn-neutral,
+    .btn-info,
+    .btn-success,
+    .btn-warning,
+    .btn-error
+  ):not(.btn-outline, .btn-ghost, .btn-soft, .btn-link) {
+  --btn-shadow: none;
+}
+
+.btn:not(
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent,
+  .btn-neutral,
+  .btn-info,
+  .btn-success,
+  .btn-warning,
+  .btn-error,
+  .btn-ghost,
+  .btn-link,
+  .btn-soft,
+  .btn-outline,
+  :disabled,
+  [aria-disabled="true"]
+) {
+  --btn-bg: var(--color-base-100);
+  --btn-border: var(--linea-fuerte);
+  --btn-shadow: var(--sombra-1);
+}
+
+.btn:not(
+    .btn-primary,
+    .btn-secondary,
+    .btn-accent,
+    .btn-neutral,
+    .btn-info,
+    .btn-success,
+    .btn-warning,
+    .btn-error,
+    .btn-ghost,
+    .btn-link,
+    .btn-soft,
+    .btn-outline,
+    :disabled,
+    [aria-disabled="true"]
+  ):hover {
+  --btn-bg: var(--color-base-200);
+  --btn-border: var(--campo-borde);
+}
+
+/* El botón de contorno neutro es una superficie con borde, sin el relleno oscuro al pasar el puntero */
+.btn-outline:not(
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent,
+  .btn-neutral,
+  .btn-info,
+  .btn-success,
+  .btn-warning,
+  .btn-error,
+  :disabled,
+  [aria-disabled="true"]
+) {
+  --btn-bg: var(--color-base-100);
+  --btn-border: var(--linea-fuerte);
+  --btn-shadow: var(--sombra-1);
+  color: var(--color-base-content);
+}
+
+.btn-outline:not(
+    .btn-primary,
+    .btn-secondary,
+    .btn-accent,
+    .btn-neutral,
+    .btn-info,
+    .btn-success,
+    .btn-warning,
+    .btn-error,
+    :disabled,
+    [aria-disabled="true"]
+  ):hover {
+  --btn-bg: var(--color-base-200);
+  --btn-border: var(--campo-borde);
+  color: var(--color-base-content);
+}
+
+/* Botones deshabilitados: superficie plana y texto con 3:1 mínimo (el 20 % de DaisyUI no llega) */
+.btn:is(:disabled, [disabled], .btn-disabled, [aria-disabled="true"]):not(.btn-link) {
+  --btn-fg: var(--texto-tenue);
+  --btn-bg: color-mix(in oklab, var(--color-base-content) 6%, var(--color-base-100));
+  --btn-border: var(--linea-fuerte);
+  --btn-shadow: none;
+  color: var(--texto-tenue);
+  background-color: color-mix(in oklab, var(--color-base-content) 6%, var(--color-base-100));
+  border-color: var(--linea-fuerte);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  --btn-bg: color-mix(in oklab, var(--color-base-content) 7%, transparent);
+}
+
+/* Insignias: pastilla con tinte del tono al 15 %, borde al 30 % y punto de color; el texto siempre acompaña */
+.badge:is(
+    .badge-primary,
+    .badge-secondary,
+    .badge-accent,
+    .badge-info,
+    .badge-success,
+    .badge-warning,
+    .badge-error
+  ):not(.badge-dash, .badge-soft) {
+  color: var(--badge-color);
+  background-color: color-mix(in oklab, var(--badge-color) 15%, var(--color-base-100));
+  border-color: color-mix(in oklab, var(--badge-color) 30%, var(--color-base-100));
+}
+
+.badge {
+  --size: 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Insignia con texto largo: puede pasar a varias líneas sin salirse de su contenedor */
+.badge.badge-ajustable {
+  height: auto;
+  min-height: 1.5rem;
+  max-width: 100%;
+  padding-block: 0.25rem;
+  border-radius: 1rem;
+  white-space: normal;
+  text-align: left;
+}
+
+/* La marca como texto usa el verde legible del tema, nunca el lima de relleno sobre claro */
+.badge-primary {
+  --badge-color: var(--verde-texto);
+}
+
+/* Punto de color al inicio cuando la insignia no lleva icono */
+.badge:not(.badge-dash, :has(svg))::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: currentColor;
+}
+
+/* Amarillo del semáforo de vencimiento: tono propio con contraste en ambos temas */
+.badge-amarillo {
+  --badge-color: var(--semaforo-amarillo);
+  color: var(--badge-color);
+  background-color: color-mix(in oklab, var(--badge-color) 15%, var(--color-base-100));
+  border-color: color-mix(in oklab, var(--badge-color) 30%, var(--color-base-100));
+}
+
+/* Neutro y fantasma: gris con texto secundario; el neutro de DaisyUI se funde con el fondo en oscuro */
+.badge:is(.badge-neutral, .badge-ghost) {
+  --badge-color: var(--linea-fuerte);
+  color: var(--texto-suave);
+  background-color: color-mix(in oklab, var(--color-base-content) 7%, var(--color-base-100));
+  border-color: var(--linea-fuerte);
+}
+
+/* Avisos: siempre suaves, con el texto del tono sobre un fondo teñido */
+.alert {
+  --alert-border-color: var(--color-base-300);
+  border-radius: 1rem;
+  box-shadow: none;
+}
+
+.alert:is(.alert-info, .alert-success, .alert-warning, .alert-error) {
+  color: var(--alert-color);
+  background: color-mix(in oklab, var(--alert-color) 8%, var(--color-base-100));
+  --alert-border-color: color-mix(in oklab, var(--alert-color) 28%, var(--color-base-100));
+}
+
+/* Tablas: cabecera sobre el lienzo, filas con separador fino y resaltado al pasar el puntero */
+.table {
+  --tabla-borde: color-mix(in oklab, var(--color-base-content) 9%, transparent);
+}
+
+.table :where(th, td) {
+  padding-inline: 1.5rem;
+  padding-block: 0.875rem;
+}
+
+/* Con poco ancho las celdas se acercan para que la tabla quepa sin desplazamiento */
+@media (min-width: 48rem) and (max-width: 79.99rem) {
+  .table :where(th, td) {
+    padding-inline: 1rem;
+  }
+}
+
+.table :where(thead th) {
+  background-color: var(--fila-hundida);
+  color: var(--texto-suave);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table :where(tbody tr) {
+  border-bottom: 1px solid var(--tabla-borde);
+}
+
+.table :where(tbody tr:last-child) {
+  border-bottom: 0;
+}
+
+.table :where(tbody tr:hover) {
+  background-color: var(--fondo-hover);
+}
+
+.table-zebra :where(tbody tr:nth-child(even)) {
+  background-color: color-mix(in oklab, var(--color-base-content) 2.5%, transparent);
+}
+
+/* Las tarjetas DaisyUI que aún no usan el componente Tarjeta se ven como superficies con borde */
+.card {
+  background-color: var(--color-base-100);
+  border: 1px solid var(--linea-tarjeta);
+  box-shadow: none;
+}
+
+/* Los vacíos dentro de una tarjeta no duplican el borde */
+.tarjeta .estado-vacio {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Pistas de barras de avance y controles deslizantes: visibles sobre la tarjeta en ambos temas */
+.progress {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: color-mix(in oklab, var(--color-base-content) 20%, var(--color-base-100));
+  box-shadow: inset 0 0 0 1px var(--linea-fuerte);
+}
+
+.progress-primary {
+  color: var(--verde-texto);
+}
+
+.range {
+  --range-bg: color-mix(in oklab, var(--color-base-content) 28%, var(--color-base-100));
+}
+
+.range-primary {
+  --range-thumb: var(--verde-texto);
+  color: var(--verde-texto);
+}
+
+/* La marca como texto, icono o borde usa el verde legible del tema (oliva en claro, lima en oscuro) */
+.text-primary {
+  color: var(--verde-texto);
+}
+
+.border-primary {
+  border-color: var(--verde-texto);
+}
+
+/* Objetivos táctiles de 44 px en pantallas estrechas y punteros táctiles */
+@media (max-width: 47.99rem), (pointer: coarse) {
+  .btn {
+    --size: 2.75rem;
+  }
+
+  .btn.btn-sm,
+  .btn.btn-xs {
+    --size: 2.75rem;
+  }
+
+  .btn {
+    min-width: 2.75rem;
+  }
+
+  .btn.btn-lg {
+    --size: 3.25rem;
+  }
+
+  .input,
+  .select {
+    --size: 2.75rem;
+  }
+
+  .input,
+  .select,
+  .textarea {
+    font-size: 1rem;
+  }
+
+  .checkbox {
+    --size: 1.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -99,4 +608,305 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* El contenedor principal recibe foco programático desde el enlace de salto y no necesita anillo */
+#contenido:focus-visible {
+  outline: none;
+}
+
+/* Cajón de navegación móvil: entra desde la izquierda con velo propio */
+.cajon-movil[open] {
+  animation: cajon-entrada 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cajon-movil::backdrop {
+  background-color: var(--velo-modal);
+  -webkit-backdrop-filter: blur(var(--desenfoque-modal));
+  backdrop-filter: blur(var(--desenfoque-modal));
+}
+
+@keyframes cajon-entrada {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Las pestañas viven en un contenedor con scroll: el anillo de foco va hacia dentro para no recortarse */
+.pestania-boton:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Controles dentro de zonas con recorte (calendario): el anillo de foco va hacia dentro para no cortarse */
+.foco-interior:focus-visible {
+  outline-offset: -2px;
+}
+
+/* Barra de carga indeterminada: solo anima transform; con movimiento reducido queda fija y visible */
+@keyframes barra-carga {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
+.barra-carga {
+  animation: barra-carga 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-carga {
+    animation: none;
+    transform: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
+/* Enlaces de texto: color de marca, sin subrayado; el discreto hereda el color del texto */
+.enlace,
+.enlace-discreto {
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 150ms;
+  cursor: pointer;
+}
+
+.enlace {
+  color: var(--verde-texto);
+}
+
+.enlace-discreto {
+  font-weight: 600;
+}
+
+.enlace:hover,
+.enlace-discreto:hover {
+  color: var(--verde-texto);
+}
+
+.enlace-discreto:hover {
+  color: var(--verde-texto);
+}
+
+/* Área táctil de 44 px en enlaces de texto sin cambiar su aspecto: pseudoelemento invisible centrado */
+@layer components {
+  @media (max-width: 47.99rem), (pointer: coarse) {
+    .enlace:not([class*="after:"]),
+    .enlace-discreto:not([class*="after:"]) {
+      position: relative;
+    }
+
+    .enlace:not([class*="after:"])::after,
+    .enlace-discreto:not([class*="after:"])::after {
+      content: "";
+      position: absolute;
+      inset-inline: -0.25rem;
+      top: 50%;
+      height: 2.75rem;
+      min-width: 2.75rem;
+      transform: translateY(-50%);
+    }
+  }
+}
+
+/* Tablas apiladas: en móvil cada fila pasa a ser una tarjeta con la etiqueta de cada dato */
+@media (max-width: 47.99rem) {
+  .tabla-apilada thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .tabla-apilada,
+  .tabla-apilada tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .tabla-apilada tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .tabla-apilada tbody :is(th, td) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    border: 0;
+    text-align: right;
+    min-width: 0;
+  }
+
+  .tabla-apilada tbody :is(th, td)[data-etiqueta]::before {
+    content: attr(data-etiqueta);
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--texto-suave);
+  }
+
+  .tabla-apilada tbody th:not([data-etiqueta]) {
+    justify-content: flex-start;
+    text-align: left;
+    font-size: 1rem;
+  }
+
+  .tabla-apilada tbody td:not([data-etiqueta]) {
+    justify-content: flex-start;
+  }
+}
+
+/* Tablas apiladas hasta 1280 px, para listados con muchas columnas: cada fila pasa a ser una tarjeta con la etiqueta de cada dato */
+@media (max-width: 79.99rem) {
+  .tabla-apilada-ancha thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .tabla-apilada-ancha,
+  .tabla-apilada-ancha tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .tabla-apilada-ancha tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .tabla-apilada-ancha tbody :is(th, td) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    border: 0;
+    text-align: right;
+    min-width: 0;
+  }
+
+  .tabla-apilada-ancha tbody :is(th, td)[data-etiqueta]::before {
+    content: attr(data-etiqueta);
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--texto-suave);
+  }
+
+  .tabla-apilada-ancha tbody th:not([data-etiqueta]) {
+    justify-content: flex-start;
+    text-align: left;
+    font-size: 1rem;
+  }
+
+  .tabla-apilada-ancha tbody td:not([data-etiqueta]) {
+    justify-content: flex-start;
+  }
+}
+
+/* Gráficas SVG: entrada suave, anillo de foco propio (el contorno no siempre se dibuja en SVG) y resaltado al pasar */
+@keyframes grafica-aparece {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes grafica-crece-v {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes grafica-crece-h {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.grafica-entrada {
+  animation: grafica-aparece 220ms ease-out both;
+}
+
+.grafica-barra-v {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: grafica-crece-v 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.grafica-barra-h {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: grafica-crece-h 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.grafica-punto {
+  cursor: pointer;
+  outline: none;
+}
+
+.grafica-anillo {
+  fill: none;
+  stroke: var(--verde-texto);
+  stroke-width: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.grafica-punto:focus-visible .grafica-anillo {
+  opacity: 1;
+}
+
+.grafica-punto[data-activo="true"] .grafica-marca {
+  filter: brightness(1.08) saturate(1.1);
+}
+
+.grafica-fondo-activo {
+  fill: var(--color-base-content);
+  opacity: 0;
+  fill-opacity: 0.06;
+}
+
+.grafica-punto[data-activo="true"] .grafica-fondo-activo {
+  opacity: 1;
+}
+
+.checkbox-primary {
+  --input-color: var(--verde-texto);
 }

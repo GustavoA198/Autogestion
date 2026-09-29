@@ -20,5 +20,6 @@ export async function proxy(solicitud: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Los iconos de la marca deben cargar también en la pantalla de acceso, sin sesión
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png).*)"],
 };

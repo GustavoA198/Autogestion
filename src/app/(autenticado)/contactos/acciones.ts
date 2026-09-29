@@ -11,6 +11,7 @@ import {
   vincularContacto,
 } from "@/lib/contactos/operaciones";
 import { validarContacto, type ErroresContacto } from "@/lib/contactos/validacion";
+import { enModal } from "@/lib/formulario-modal";
 
 export type ValoresContacto = {
   nombre: string;
@@ -25,6 +26,8 @@ export type ValoresContacto = {
 export type EstadoFormularioContacto = {
   errores?: ErroresContacto;
   valores?: ValoresContacto;
+  // Guardado correcto en modo modal: el cliente cierra el modal en lugar de redirigir
+  ok?: boolean;
 };
 
 const ERROR_PROYECTO = "Alguno de los proyectos elegidos ya no existe.";
@@ -69,6 +72,7 @@ export async function accionCrearContacto(
   }
 
   revalidatePath("/contactos");
+  if (enModal(formulario)) return { ok: true };
   redirect(`/contactos/${resultado.id}`);
 }
 
@@ -90,6 +94,7 @@ export async function accionEditarContacto(
 
   revalidatePath("/contactos");
   revalidatePath("/proyectos", "layout");
+  if (enModal(formulario)) return { ok: true };
   redirect(`/contactos/${id}`);
 }
 

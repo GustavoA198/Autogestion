@@ -1,12 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useRef } from "react";
 import { AreaTexto } from "@/componentes/area-texto";
-import { Boton } from "@/componentes/boton";
-import { Casilla } from "@/componentes/casilla";
 import { Entrada } from "@/componentes/entrada";
+import {
+  FilaCampos,
+  MarcoFormulario,
+  ResumenErrores,
+  SeccionFormulario,
+  useFocoPrimerError,
+} from "@/componentes/formulario";
 import { Selector } from "@/componentes/selector";
+import { SelectorAlcance } from "@/componentes/selector-alcance";
 import { CATEGORIAS } from "@/lib/credenciales/categorias";
 import { LIMITES_CREDENCIAL, type ErroresCredencial } from "@/lib/credenciales/validacion";
 import type { EstadoFormularioCredencial, ValoresCredencial } from "./acciones";
@@ -22,6 +27,8 @@ type Propiedades = {
   editando?: boolean;
   textoEnviar: string;
   rutaCancelar: string;
+  // Montado dentro de ModalRuta: sin marco de página, con cuerpo desplazable, pie fijo y cierre al guardar
+  enModal?: boolean;
 };
 
 const VACIOS: ValoresCredencial = {
@@ -43,103 +50,97 @@ type PropiedadesCampos = {
 
 // Se remonta con una clave nueva tras cada envío fallido para restaurar lo escrito
 function Campos({ valores, errores, proyectos, editando }: PropiedadesCampos) {
-  const [esGlobal, setEsGlobal] = useState(valores.global);
-
   return (
-    <div className="space-y-4">
-      <Entrada
-        etiqueta="Nombre"
-        name="nombre"
-        required
-        maxLength={LIMITES_CREDENCIAL.nombre}
-        defaultValue={valores.nombre}
-        invalido={Boolean(errores.nombre)}
-        mensaje={errores.nombre}
-      />
-      <Selector
-        etiqueta="Categoría"
-        name="categoria"
-        defaultValue={valores.categoria}
-        invalido={Boolean(errores.categoria)}
-        mensaje={errores.categoria}
+    <>
+      <SeccionFormulario
+        titulo="Identificación"
+        descripcion="Un nombre que te permita reconocerla al instante."
       >
-        {Object.entries(CATEGORIAS).map(([valor, etiqueta]) => (
-          <option key={valor} value={valor}>
-            {etiqueta}
-          </option>
-        ))}
-      </Selector>
-      <Entrada
-        etiqueta="Usuario (opcional)"
-        name="usuario"
-        autoComplete="off"
-        maxLength={LIMITES_CREDENCIAL.usuario}
-        defaultValue={valores.usuario}
-        invalido={Boolean(errores.usuario)}
-        mensaje={errores.usuario}
-      />
-      <Entrada
-        etiqueta={editando ? "Nuevo secreto (opcional)" : "Secreto"}
-        name="secreto"
-        type="password"
-        autoComplete="new-password"
-        required={!editando}
-        maxLength={LIMITES_CREDENCIAL.secreto}
-        invalido={Boolean(errores.secreto)}
-        mensaje={
-          errores.secreto ??
-          (editando ? "Déjalo vacío para conservar el secreto actual." : undefined)
-        }
-      />
-      <Entrada
-        etiqueta="Host o URL (opcional)"
-        name="host"
-        autoComplete="off"
-        maxLength={LIMITES_CREDENCIAL.host}
-        defaultValue={valores.host}
-        invalido={Boolean(errores.host)}
-        mensaje={errores.host}
-      />
-      <AreaTexto
-        etiqueta="Nota (opcional)"
-        name="nota"
-        rows={3}
-        maxLength={LIMITES_CREDENCIAL.nota}
-        defaultValue={valores.nota}
-        invalido={Boolean(errores.nota)}
-        mensaje={errores.nota}
-      />
-      <fieldset className="space-y-1">
-        <legend className="label-text text-base-content mb-1">Alcance</legend>
-        <Casilla
-          etiqueta="Global (visible desde cualquier proyecto)"
-          name="global"
-          defaultChecked={valores.global}
-          onChange={(evento) => setEsGlobal(evento.target.checked)}
-        />
-        {proyectos.length === 0 ? (
-          <p className="text-sm opacity-70">Aún no hay proyectos para asociar.</p>
-        ) : (
-          <div
-            className="border-base-300 max-h-48 overflow-y-auto rounded-lg border p-2"
-            role="group"
-            aria-label="Proyectos asociados"
+        <FilaCampos>
+          <Entrada
+            etiqueta="Nombre"
+            name="nombre"
+            required
+            autoComplete="off"
+            maxLength={LIMITES_CREDENCIAL.nombre}
+            defaultValue={valores.nombre}
+            invalido={Boolean(errores.nombre)}
+            mensaje={errores.nombre}
+          />
+          <Selector
+            etiqueta="Categoría"
+            name="categoria"
+            defaultValue={valores.categoria}
+            invalido={Boolean(errores.categoria)}
+            mensaje={errores.categoria}
           >
-            {proyectos.map((proyecto) => (
-              <Casilla
-                key={proyecto.id}
-                etiqueta={proyecto.nombre}
-                name="proyectoIds"
-                value={proyecto.id}
-                defaultChecked={valores.proyectoIds.includes(proyecto.id)}
-                disabled={esGlobal}
-              />
+            {Object.entries(CATEGORIAS).map(([valor, etiqueta]) => (
+              <option key={valor} value={valor}>
+                {etiqueta}
+              </option>
             ))}
-          </div>
-        )}
-        {errores.proyectoIds ? <p className="text-error text-sm">{errores.proyectoIds}</p> : null}
-      </fieldset>
-    </div>
+          </Selector>
+        </FilaCampos>
+      </SeccionFormulario>
+      <SeccionFormulario
+        titulo="Acceso"
+        descripcion="El secreto se guarda cifrado y nunca aparece en los listados."
+      >
+        <FilaCampos>
+          <Entrada
+            etiqueta="Usuario (opcional)"
+            name="usuario"
+            autoComplete="off"
+            maxLength={LIMITES_CREDENCIAL.usuario}
+            defaultValue={valores.usuario}
+            invalido={Boolean(errores.usuario)}
+            mensaje={errores.usuario}
+          />
+          <Entrada
+            etiqueta={editando ? "Nuevo secreto (opcional)" : "Secreto"}
+            name="secreto"
+            type="password"
+            autoComplete="new-password"
+            required={!editando}
+            maxLength={LIMITES_CREDENCIAL.secreto}
+            invalido={Boolean(errores.secreto)}
+            mensaje={
+              errores.secreto ??
+              (editando ? "Déjalo vacío para conservar el secreto actual." : undefined)
+            }
+          />
+        </FilaCampos>
+        <Entrada
+          etiqueta="Host o URL (opcional)"
+          name="host"
+          autoComplete="off"
+          maxLength={LIMITES_CREDENCIAL.host}
+          defaultValue={valores.host}
+          invalido={Boolean(errores.host)}
+          mensaje={errores.host}
+        />
+        <AreaTexto
+          etiqueta="Nota (opcional)"
+          name="nota"
+          rows={3}
+          maxLength={LIMITES_CREDENCIAL.nota}
+          defaultValue={valores.nota}
+          invalido={Boolean(errores.nota)}
+          mensaje={errores.nota}
+        />
+      </SeccionFormulario>
+      <SeccionFormulario
+        titulo="Alcance"
+        descripcion="Una credencial puede ser global o estar asociada a uno o varios proyectos."
+      >
+        <SelectorAlcance
+          global={valores.global}
+          proyectoIds={valores.proyectoIds}
+          proyectos={proyectos}
+          error={errores.proyectoIds}
+        />
+      </SeccionFormulario>
+    </>
   );
 }
 
@@ -150,12 +151,24 @@ export function FormularioCredencial({
   editando = false,
   textoEnviar,
   rutaCancelar,
+  enModal = false,
 }: Propiedades) {
   const [estado, enviar, pendiente] = useActionState(accion, {});
+  const formulario = useRef<HTMLFormElement>(null);
   const valores = estado.valores ?? valoresIniciales;
+  useFocoPrimerError(formulario, estado.errores);
 
   return (
-    <form action={enviar} className="max-w-xl space-y-4" noValidate>
+    <MarcoFormulario
+      formulario={formulario}
+      accion={enviar}
+      enModal={enModal}
+      ok={estado.ok}
+      pendiente={pendiente}
+      textoEnviar={textoEnviar}
+      rutaCancelar={rutaCancelar}
+    >
+      <ResumenErrores cantidad={Object.keys(estado.errores ?? {}).length} />
       <Campos
         key={JSON.stringify(valores)}
         valores={valores}
@@ -163,14 +176,6 @@ export function FormularioCredencial({
         proyectos={proyectos}
         editando={editando}
       />
-      <div className="flex gap-2 pt-2">
-        <Boton type="submit" cargando={pendiente}>
-          {textoEnviar}
-        </Boton>
-        <Link href={rutaCancelar} className="btn btn-ghost">
-          Cancelar
-        </Link>
-      </div>
-    </form>
+    </MarcoFormulario>
   );
 }

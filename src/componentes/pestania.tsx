@@ -46,7 +46,11 @@ export function Pestania({ pestanias, inicial, ariaLabel }: Propiedades) {
 
   return (
     <div className="w-full">
-      <div role="tablist" aria-label={ariaLabel} className="tabs tabs-box bg-base-200">
+      <div
+        role="tablist"
+        aria-label={ariaLabel}
+        className="flex [scrollbar-width:none] gap-2 overflow-x-auto p-0.5"
+      >
         {pestanias.map((pestania, indice) => {
           const esActivo = pestania.id === idActivo;
           return (
@@ -62,7 +66,12 @@ export function Pestania({ pestanias, inicial, ariaLabel }: Propiedades) {
               aria-selected={esActivo}
               aria-controls={`${idBase}-${pestania.id}-panel`}
               tabIndex={esActivo ? 0 : -1}
-              className={["tab", esActivo ? "tab-active" : ""].filter(Boolean).join(" ")}
+              className={[
+                "pestania-boton min-h-11 shrink-0 cursor-pointer rounded-full border px-5 text-sm whitespace-nowrap transition-colors duration-150",
+                esActivo
+                  ? "bg-primary text-primary-content border-[var(--borde-primario)] font-bold"
+                  : "text-suave hover:bg-hover hover:text-base-content border-transparent font-bold",
+              ].join(" ")}
               onClick={() => setActivo(pestania.id)}
               onKeyDown={(evento) => alPulsarTecla(evento, indice)}
             >
@@ -81,7 +90,7 @@ export function Pestania({ pestanias, inicial, ariaLabel }: Propiedades) {
             aria-labelledby={`${idBase}-${pestania.id}`}
             hidden={!esActivo}
             tabIndex={0}
-            className="pt-4"
+            className="pt-5"
           >
             {pestania.contenido}
           </div>

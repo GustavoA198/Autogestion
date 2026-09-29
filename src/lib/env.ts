@@ -79,17 +79,17 @@ const esquemaCalendario = z.object({
   GOOGLE_REDIRECT_URI: z
     .string()
     .optional()
-    .transform((v) => v ?? "http://localhost:3100/api/calendario/google/callback"),
+    .transform((v) => v || "http://localhost:3000/api/calendario/google/callback"),
   MICROSOFT_CLIENT_ID: z.string().optional(),
   MICROSOFT_CLIENT_SECRET: z.string().optional(),
   MICROSOFT_TENANT_ID: z
     .string()
     .optional()
-    .transform((v) => v ?? "common"),
+    .transform((v) => v || "common"),
   MICROSOFT_REDIRECT_URI: z
     .string()
     .optional()
-    .transform((v) => v ?? "http://localhost:3100/api/calendario/microsoft/callback"),
+    .transform((v) => v || "http://localhost:3000/api/calendario/microsoft/callback"),
 });
 
 export type EntornoCalendario = z.infer<typeof esquemaCalendario>;

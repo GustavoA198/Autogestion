@@ -1,7 +1,10 @@
-// Error boundary para el dashboard.
+// Límite de error del panel con opción de reintentar.
 "use client";
 
 import { useEffect } from "react";
+import { Boton } from "@/componentes/boton";
+import { BotonEnlace } from "@/componentes/enlace";
+import { EstadoError } from "@/componentes/estado-error";
 
 type Props = {
   error: Error;
@@ -10,26 +13,21 @@ type Props = {
 
 export default function DashboardError({ error, reset }: Props) {
   useEffect(() => {
-    console.error("[dashboard]", error);
+    console.error("[panel]", error);
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Error al cargar el panel</h2>
-        <p className="text-base-content/60 max-w-md text-sm">
-          Ocurrió un error inesperado. Los bloques se muestran de forma independiente, por lo que
-          puedes intentar recargar solo esta sección.
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <button className="btn btn-primary" onClick={reset}>
-          Reintentar
-        </button>
-        <button className="btn btn-outline" onClick={() => (window.location.href = "/")}>
-          Ir al inicio
-        </button>
-      </div>
-    </div>
+    <EstadoError
+      titulo="No se pudo cargar el panel"
+      mensaje="Ocurrió un error inesperado. Puedes reintentar o ir a otra sección."
+      accion={
+        <div className="flex flex-wrap gap-2">
+          <Boton onClick={reset}>Reintentar</Boton>
+          <BotonEnlace href="/tareas" variante="secundario">
+            Ir a tareas
+          </BotonEnlace>
+        </div>
+      }
+    />
   );
 }

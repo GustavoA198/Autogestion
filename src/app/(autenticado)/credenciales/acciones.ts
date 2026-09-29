@@ -12,6 +12,7 @@ import {
   vincularCredencial,
 } from "@/lib/credenciales/operaciones";
 import { validarCredencial, type ErroresCredencial } from "@/lib/credenciales/validacion";
+import { enModal } from "@/lib/formulario-modal";
 
 // Nunca incluye el secreto: el usuario debe volver a escribirlo si el envío falla
 export type ValoresCredencial = {
@@ -27,6 +28,8 @@ export type ValoresCredencial = {
 export type EstadoFormularioCredencial = {
   errores?: ErroresCredencial;
   valores?: ValoresCredencial;
+  // Guardado correcto en modo modal: el cliente cierra el modal en lugar de redirigir
+  ok?: boolean;
 };
 
 export type RespuestaSecreto = { ok: true; secreto: string } | { ok: false };
@@ -74,6 +77,7 @@ export async function accionCrearCredencial(
   }
 
   revalidatePath("/credenciales");
+  if (enModal(formulario)) return { ok: true };
   redirect(`/credenciales/${resultado.id}`);
 }
 
@@ -95,6 +99,7 @@ export async function accionEditarCredencial(
 
   revalidatePath("/credenciales");
   revalidatePath("/proyectos", "layout");
+  if (enModal(formulario)) return { ok: true };
   redirect(`/credenciales/${id}`);
 }
 

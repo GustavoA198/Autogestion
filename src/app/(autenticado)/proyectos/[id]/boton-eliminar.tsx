@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Boton } from "@/componentes/boton";
-import { Confirmacion } from "@/componentes/confirmacion";
+import { BotonEliminar } from "@/componentes/boton-eliminar";
 import { accionEliminarProyecto } from "../acciones";
 
 type Resumen = { exclusivas: string[]; desvinculadas: string[] };
@@ -12,10 +10,10 @@ function mensajeEliminacion(
   resumenCredenciales: Resumen,
   resumenContactos: Resumen,
 ): string {
-  const partes = [`Se eliminara "${nombre}".`];
+  const partes = [`Se eliminará "${nombre}".`];
   if (resumenCredenciales.exclusivas.length > 0) {
     partes.push(
-      `Credenciales exclusivas que se borraran (${resumenCredenciales.exclusivas.length}): ${resumenCredenciales.exclusivas.join(", ")}.`,
+      `Credenciales exclusivas que se borrarán (${resumenCredenciales.exclusivas.length}): ${resumenCredenciales.exclusivas.join(", ")}.`,
     );
   }
   if (resumenCredenciales.desvinculadas.length > 0) {
@@ -25,7 +23,7 @@ function mensajeEliminacion(
   }
   if (resumenContactos.exclusivas.length > 0) {
     partes.push(
-      `Contactos exclusivos que se borraran (${resumenContactos.exclusivas.length}): ${resumenContactos.exclusivas.join(", ")}.`,
+      `Contactos exclusivos que se borrarán (${resumenContactos.exclusivas.length}): ${resumenContactos.exclusivas.join(", ")}.`,
     );
   }
   if (resumenContactos.desvinculadas.length > 0) {
@@ -33,11 +31,11 @@ function mensajeEliminacion(
       `Contactos compartidos o globales que solo se desvinculan (${resumenContactos.desvinculadas.length}): ${resumenContactos.desvinculadas.join(", ")}.`,
     );
   }
-  partes.push("Esta accion no se puede deshacer.");
+  partes.push("Esta acción no se puede deshacer.");
   return partes.join(" ");
 }
 
-export function BotonEliminar({
+export function BotonEliminarProyecto({
   id,
   nombre,
   resumenCredenciales,
@@ -48,24 +46,12 @@ export function BotonEliminar({
   resumenCredenciales: Resumen;
   resumenContactos: Resumen;
 }) {
-  const [abierto, setAbierto] = useState(false);
-  const [pendiente, iniciar] = useTransition();
-
   return (
-    <>
-      <Boton variante="peligro" onClick={() => setAbierto(true)}>
-        Eliminar
-      </Boton>
-      <Confirmacion
-        abierto={abierto}
-        alCancelar={() => setAbierto(false)}
-        alConfirmar={() => iniciar(() => accionEliminarProyecto(id))}
-        titulo="Eliminar proyecto"
-        mensaje={mensajeEliminacion(nombre, resumenCredenciales, resumenContactos)}
-        textoConfirmar="Eliminar proyecto"
-        cargando={pendiente}
-        destructivo
-      />
-    </>
+    <BotonEliminar
+      alConfirmar={() => accionEliminarProyecto(id)}
+      titulo="Eliminar proyecto"
+      mensaje={mensajeEliminacion(nombre, resumenCredenciales, resumenContactos)}
+      textoConfirmar="Eliminar proyecto"
+    />
   );
 }

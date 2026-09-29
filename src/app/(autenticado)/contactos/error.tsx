@@ -1,9 +1,18 @@
 "use client";
 
-export default function Error() {
+import { Boton } from "@/componentes/boton";
+import { EstadoError } from "@/componentes/estado-error";
+
+export default function ErrorContactos({ reset }: { error: Error; reset: () => void }) {
   return (
-    <div className="alert alert-error mt-4 max-w-xl">
-      <span>No se pudieron cargar los contactos. Intenta recargar la pagina.</span>
-    </div>
+    <EstadoError
+      titulo="No se pudieron cargar los contactos"
+      mensaje="Ocurrió un problema al consultar la información. Intenta de nuevo."
+      accion={
+        <Boton variante="secundario" tamano="pequeno" onClick={reset}>
+          Reintentar
+        </Boton>
+      }
+    />
   );
 }

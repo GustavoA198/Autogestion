@@ -24,6 +24,7 @@
     "cifrado:configurar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/configurar-cifrado.mts"
   },
   "dependencies": {
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
     "daisyui": "^5.7.44",

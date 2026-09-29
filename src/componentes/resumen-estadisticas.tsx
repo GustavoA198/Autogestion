@@ -1,103 +1,24 @@
-import { GraficaBarras } from "@/componentes/grafica-barras";
-import { TarjetaKpi } from "@/componentes/shell/tarjeta-kpi";
-
+// Datos de barras por semana que reutiliza el dashboard; el resto de las estadísticas vive en estadisticas/.
 type DatoSemana = { semana: string; cantidad: number };
-type DatoProyecto = {
-  proyectoId: string | null;
-  nombre: string;
-  cantidad: number;
-};
 
-type Props = {
-  datosSemana: DatoSemana[];
-  datosProyecto: DatoProyecto[];
-  total: number;
-  periodoSemanas: number;
-};
-
-function formatearSemana(fechaStr: string): string {
+export function formatearSemana(fechaStr: string): string {
   const fecha = new Date(fechaStr);
   return new Intl.DateTimeFormat("es-CO", {
-    day: "2-digit",
+    day: "numeric",
     month: "short",
+    timeZone: "UTC",
   }).format(fecha);
 }
 
-export function ResumenEstadisticas({
-  datosSemana,
-  datosProyecto,
-  total,
-  periodoSemanas,
-}: Props) {
-  const barrasSemana = datosSemana.map((d) => ({
+function textoTareas(cantidad: number): string {
+  return `${cantidad} tarea${cantidad !== 1 ? "s" : ""} completada${cantidad !== 1 ? "s" : ""}`;
+}
+
+export function barrasPorSemana(datosSemana: DatoSemana[]) {
+  return datosSemana.map((d) => ({
     etiqueta: formatearSemana(d.semana),
     cantidad: d.cantidad,
-    ariaLabel: `Semana del ${formatearSemana(d.semana)}: ${d.cantidad} tarea${d.cantidad !== 1 ? "s" : ""} completada${d.cantidad !== 1 ? "s" : ""}`,
+    ariaLabel: `Semana del ${formatearSemana(d.semana)}: ${textoTareas(d.cantidad)}`,
+    detalle: `Semana del ${formatearSemana(d.semana)}`,
   }));
-
-  const barrasProyecto = datosProyecto
-    .filter((d) => d.cantidad > 0)
-    .map((d) => ({
-      etiqueta: d.nombre.length > 12 ? d.nombre.slice(0, 12) + "…" : d.nombre,
-      cantidad: d.cantidad,
-      ariaLabel: `${d.nombre}: ${d.cantidad} tarea${d.cantidad !== 1 ? "s" : ""} completada${d.cantidad !== 1 ? "s" : ""}`,
-    }));
-
-  return (
-    <section className="grid gap-6" aria-label="Estadísticas de productividad">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <TarjetaKpi
-          etiqueta="Total completadas"
-          valor={String(total)}
-          icono="lista"
-          detalle={`últimas ${periodoSemanas} sem`}
-          tonoDetalle="info"
-        />
-        <TarjetaKpi
-          etiqueta="Promedio semanal"
-          valor={
-            datosSemana.length > 0
-              ? (total / datosSemana.length).toFixed(1)
-              : "0"
-          }
-          icono="panel"
-          tonoDetalle="neutral"
-        />
-        <TarjetaKpi
-          etiqueta="Mejor semana"
-          valor={
-            datosSemana.length > 0
-              ? String(Math.max(...datosSemana.map((d) => d.cantidad)))
-              : "0"
-          }
-          icono="panel"
-          tonoDetalle="success"
-        />
-        <TarjetaKpi
-          etiqueta="Proyectos activos"
-          valor={String(datosProyecto.filter((d) => d.cantidad > 0).length)}
-          icono="proyectos"
-          tonoDetalle="neutral"
-        />
-      </div>
-
-      {barrasSemana.length > 0 ? (
-        <div className="card card-border bg-base-200 shadow-sm">
-          <div className="card-body gap-4">
-            <h3 className="card-title text-base">Tareas por semana</h3>
-            <GraficaBarras datos={barrasSemana} altoMaximo={160} />
-          </div>
-        </div>
-      ) : null}
-
-      {barrasProyecto.length > 0 ? (
-        <div className="card card-border bg-base-200 shadow-sm">
-          <div className="card-body gap-4">
-            <h3 className="card-title text-base">Tareas por proyecto</h3>
-            <GraficaBarras datos={barrasProyecto} altoMaximo={120} />
-          </div>
-        </div>
-      ) : null}
-    </section>
-  );
 }
