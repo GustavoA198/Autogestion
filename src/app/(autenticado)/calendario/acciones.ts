@@ -143,7 +143,7 @@ export type ResultadoSincronizacion =
       // Fecha ISO de la última sincronización de la cuenta
       ultimaSincronizacion: string | null;
     }
-  | { ok: false; codigo: ErrorCalendario["codigo"]; mensaje: string };
+  | { ok: false; codigo: ErrorCalendarioBase["codigo"]; mensaje: string };
 
 // El origen "auto" lo usa el disparo automático: respeta el límite de frecuencia y no revalida la página
 export async function accionSincronizarCalendario(
