@@ -8,6 +8,7 @@ type Tono =
   | "success"
   | "warning"
   | "error"
+  | "amarillo"
   | "neutral"
   | "ghost";
 
@@ -19,6 +20,7 @@ const CLASES: Record<Tono, string> = {
   success: "badge-success",
   warning: "badge-warning",
   error: "badge-error",
+  amarillo: "badge-amarillo",
   neutral: "badge-neutral",
   ghost: "badge-ghost",
 };

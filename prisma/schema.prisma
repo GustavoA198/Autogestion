@@ -123,11 +123,14 @@ model Nota {
   proyectoId String   @map("proyecto_id")
   fecha      DateTime
   texto      String
+  proximoPaso String  @map("proximo_paso")
+  minutos    Int?
   creadoEn   DateTime @default(now()) @map("creado_en")
   actualizadoEn DateTime @updatedAt @map("actualizado_en")
   proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
 
   @@index([proyectoId, fecha])
+  @@index([fecha])
   @@map("nota")
 }
 
@@ -141,6 +144,28 @@ enum FrecuenciaTarea {
   @@map("frecuencia_tarea")
 }
 
+// Estado de avance de una tarea; COMPLETADA y CANCELADA la cierran
+enum EstadoTarea {
+  NUEVA          @map("nueva")
+  EN_DESARROLLO  @map("en_desarrollo")
+  PAUSADA        @map("pausada")
+  BLOQUEADA      @map("bloqueada")
+  COMPLETADA     @map("completada")
+  CANCELADA      @map("cancelada")
+
+  @@map("estado_tarea")
+}
+
+// Prioridad de una tarea
+enum PrioridadTarea {
+  BAJA     @map("baja")
+  MEDIA    @map("media")
+  ALTA     @map("alta")
+  URGENTE  @map("urgente")
+
+  @@map("prioridad_tarea")
+}
+
 // Tarea con recurrencia configurable; puede asociarse a un proyecto o ser independiente
 model Tarea {
   id             String         @id @default(cuid())
@@ -150,15 +175,66 @@ model Tarea {
   diaSemana      Int?           @map("dia_semana")        // 0=domingo a 6=sábado, solo SEMANAL
   diaMes         Int?           @map("dia_mes")          // 1-31, solo MENSUAL
   fechaPuntual   DateTime?      @map("fecha_puntual")     // solo PUNTUAL
+  estado         EstadoTarea    @default(NUEVA)
+  prioridad      PrioridadTarea @default(MEDIA)
+  fechaInicio    DateTime?      @map("fecha_inicio") @db.Date
+  fechaLimite    DateTime?      @map("fecha_limite") @db.Date
+  responsable    String?
+  asignadoPor    String?        @map("asignado_por")
+  porcentaje     Int            @default(0)   // en desuso: el avance se deriva de las subtareas y no se lee
   proyectoId     String?        @map("proyecto_id")
   activa         Boolean        @default(true)
   creadoEn       DateTime       @default(now()) @map("creado_en")
   actualizadoEn  DateTime       @updatedAt @map("actualizado_en")
   proyecto       Proyecto?      @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
   completadas    TareaCompletada[]
+  enlaces        TareaEnlace[]
+  subtareas      TareaChecklistItem[]
+  comentarios    TareaComentario[]
 
   @@index([proyectoId, activa])
+  @@index([estado])
+  @@index([fechaLimite])
   @@map("tarea")
+}
+
+// Enlace de referencia de una tarea (documento, ticket, etc.)
+model TareaEnlace {
+  id       String @id @default(cuid())
+  tareaId  String @map("tarea_id")
+  etiqueta String
+  url      String
+  orden    Int    @default(0)
+  tarea    Tarea  @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  @@index([tareaId, orden])
+  @@map("tarea_enlace")
+}
+
+// Subtarea de una tarea (título, descripción opcional y casilla); conserva el nombre de tabla original
+model TareaChecklistItem {
+  id          String  @id @default(cuid())
+  tareaId     String  @map("tarea_id")
+  texto       String
+  descripcion String?
+  hecho       Boolean @default(false)
+  orden       Int     @default(0)
+  tarea       Tarea   @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  @@index([tareaId, orden])
+  @@map("tarea_checklist_item")
+}
+
+// Comentario o avance registrado sobre una tarea
+model TareaComentario {
+  id       String   @id @default(cuid())
+  tareaId  String   @map("tarea_id")
+  texto    String
+  creadoEn DateTime @default(now()) @map("creado_en")
+  tarea    Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  @@index([tareaId, creadoEn])
+  @@map("tarea_comentario")
 }
 
 // Una ocurrencia completada; la clave única [tareaId, fecha] impede duplicar el registro del mismo día
@@ -190,6 +266,7 @@ model CuentaCalendario {
   expiresAt       DateTime?          @map("expires_at")
   scope           String?
   syncToken       String?            @map("sync_token")
+  ultimaSincronizacion DateTime?     @map("ultima_sincronizacion")
   creadoEn        DateTime           @default(now()) @map("creado_en")
   actualizadoEn   DateTime           @updatedAt @map("actualizado_en")
   reuniones       Reunion[]
@@ -208,6 +285,12 @@ model Reunion {
   inicio              DateTime
   fin                 DateTime
   enlaceReunion       String?          @map("enlace_reunion")
+  enlaceEvento        String?          @map("enlace_evento")
+  ubicacion           String?
+  organizador         String?
+  estado              String?
+  diaCompleto         Boolean          @default(false) @map("dia_completo")
+  invitados           Json?
   cuentaCalendarioId  String           @map("cuenta_calendario_id")
   cuentaCalendario    CuentaCalendario @relation(fields: [cuentaCalendarioId], references: [id], onDelete: Cascade)
   creadoEn            DateTime         @default(now()) @map("creado_en")
@@ -222,6 +305,8 @@ model Reunion {
 enum TipoNotificacion {
   REUNION_PROXIMA @map("reunion_proxima")
   TAREA_VENCE_HOY @map("tarea_vence_hoy")
+  TAREA_VENCE_PRONTO @map("tarea_vence_pronto")
+  RESUMEN_DIA     @map("resumen_dia")
 
   @@map("tipo_notificacion")
 }

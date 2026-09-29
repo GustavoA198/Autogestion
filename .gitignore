@@ -22,6 +22,12 @@ next-env.d.ts
 /playwright-report/
 /test-results/
 
+# Capturas de revisión visual
+/.playwright-mcp/
+/revision-ui*/
+/qa_screenshot_*.png
+/notif-*.png
+
 # Sistema y editores
 .DS_Store
 Thumbs.db

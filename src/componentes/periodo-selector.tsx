@@ -10,6 +10,8 @@ export function PeriodoSelector({ actual }: { actual: number }) {
 
   return (
     <Selector
+      // La clave reinicia el valor cuando cambia la URL (atrás/adelante del navegador)
+      key={actual}
       name="semanas"
       etiqueta="Periodo"
       aria-label="Seleccionar periodo en semanas"
@@ -18,7 +20,7 @@ export function PeriodoSelector({ actual }: { actual: number }) {
     >
       {PERIODOS.map((p) => (
         <option key={p} value={p}>
-          Ultimas {p} semanas
+          Últimas {p} semanas
         </option>
       ))}
     </Selector>

@@ -1,11 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useRef } from "react";
 import { AreaTexto } from "@/componentes/area-texto";
-import { Boton } from "@/componentes/boton";
-import { Casilla } from "@/componentes/casilla";
 import { Entrada } from "@/componentes/entrada";
+import {
+  FilaCampos,
+  MarcoFormulario,
+  ResumenErrores,
+  SeccionFormulario,
+  useFocoPrimerError,
+} from "@/componentes/formulario";
+import { SelectorAlcance } from "@/componentes/selector-alcance";
 import { LIMITES_CONTACTO, type ErroresContacto } from "@/lib/contactos/validacion";
 import type { EstadoFormularioContacto, ValoresContacto } from "./acciones";
 
@@ -18,6 +23,8 @@ type Propiedades = {
   valoresIniciales?: ValoresContacto;
   textoEnviar: string;
   rutaCancelar: string;
+  // Montado dentro de ModalRuta: sin marco de página, con cuerpo desplazable, pie fijo y cierre al guardar
+  enModal?: boolean;
 };
 
 const VACIOS: ValoresContacto = {
@@ -36,87 +43,77 @@ type PropiedadesCampos = {
   proyectos: { id: string; nombre: string }[];
 };
 
+// Se remonta con una clave nueva tras cada envío fallido para restaurar lo escrito
 function Campos({ valores, errores, proyectos }: PropiedadesCampos) {
-  const [esGlobal, setEsGlobal] = useState(valores.global);
-
   return (
-    <div className="space-y-4">
-      <Entrada
-        etiqueta="Nombre"
-        name="nombre"
-        required
-        maxLength={LIMITES_CONTACTO.nombre}
-        defaultValue={valores.nombre}
-        invalido={Boolean(errores.nombre)}
-        mensaje={errores.nombre}
-      />
-      <Entrada
-        etiqueta="Correo"
-        name="correo"
-        type="email"
-        required
-        maxLength={LIMITES_CONTACTO.correo}
-        defaultValue={valores.correo}
-        invalido={Boolean(errores.correo)}
-        mensaje={errores.correo}
-      />
-      <Entrada
-        etiqueta="Telefono (opcional)"
-        name="telefono"
-        type="tel"
-        maxLength={LIMITES_CONTACTO.telefono}
-        defaultValue={valores.telefono}
-        invalido={Boolean(errores.telefono)}
-        mensaje={errores.telefono}
-      />
-      <Entrada
-        etiqueta="Empresa o cargo (opcional)"
-        name="empresaOCargo"
-        maxLength={LIMITES_CONTACTO.empresa}
-        defaultValue={valores.empresaOCargo}
-        invalido={Boolean(errores.empresaOCargo)}
-        mensaje={errores.empresaOCargo}
-      />
-      <AreaTexto
-        etiqueta="Nota (opcional)"
-        name="nota"
-        rows={3}
-        maxLength={LIMITES_CONTACTO.nota}
-        defaultValue={valores.nota}
-        invalido={Boolean(errores.nota)}
-        mensaje={errores.nota}
-      />
-      <fieldset className="space-y-1">
-        <legend className="label-text text-base-content mb-1">Alcance</legend>
-        <Casilla
-          etiqueta="Global (visible desde cualquier proyecto)"
-          name="global"
-          defaultChecked={valores.global}
-          onChange={(evento) => setEsGlobal(evento.target.checked)}
+    <>
+      <SeccionFormulario
+        titulo="Datos de contacto"
+        descripcion="Cómo y dónde encontrar a la persona."
+      >
+        <FilaCampos>
+          <Entrada
+            etiqueta="Nombre"
+            name="nombre"
+            required
+            autoComplete="off"
+            maxLength={LIMITES_CONTACTO.nombre}
+            defaultValue={valores.nombre}
+            invalido={Boolean(errores.nombre)}
+            mensaje={errores.nombre}
+          />
+          <Entrada
+            etiqueta="Correo"
+            name="correo"
+            type="email"
+            required
+            autoComplete="off"
+            maxLength={LIMITES_CONTACTO.correo}
+            defaultValue={valores.correo}
+            invalido={Boolean(errores.correo)}
+            mensaje={errores.correo}
+          />
+          <Entrada
+            etiqueta="Teléfono (opcional)"
+            name="telefono"
+            type="tel"
+            autoComplete="off"
+            maxLength={LIMITES_CONTACTO.telefono}
+            defaultValue={valores.telefono}
+            invalido={Boolean(errores.telefono)}
+            mensaje={errores.telefono}
+          />
+          <Entrada
+            etiqueta="Empresa o cargo (opcional)"
+            name="empresaOCargo"
+            maxLength={LIMITES_CONTACTO.empresa}
+            defaultValue={valores.empresaOCargo}
+            invalido={Boolean(errores.empresaOCargo)}
+            mensaje={errores.empresaOCargo}
+          />
+        </FilaCampos>
+        <AreaTexto
+          etiqueta="Nota (opcional)"
+          name="nota"
+          rows={3}
+          maxLength={LIMITES_CONTACTO.nota}
+          defaultValue={valores.nota}
+          invalido={Boolean(errores.nota)}
+          mensaje={errores.nota}
         />
-        {proyectos.length === 0 ? (
-          <p className="text-sm opacity-70">Aun no hay proyectos para asociar.</p>
-        ) : (
-          <div
-            className="border-base-300 max-h-48 overflow-y-auto rounded-lg border p-2"
-            role="group"
-            aria-label="Proyectos asociados"
-          >
-            {proyectos.map((proyecto) => (
-              <Casilla
-                key={proyecto.id}
-                etiqueta={proyecto.nombre}
-                name="proyectoIds"
-                value={proyecto.id}
-                defaultChecked={valores.proyectoIds.includes(proyecto.id)}
-                disabled={esGlobal}
-              />
-            ))}
-          </div>
-        )}
-        {errores.proyectoIds ? <p className="text-error text-sm">{errores.proyectoIds}</p> : null}
-      </fieldset>
-    </div>
+      </SeccionFormulario>
+      <SeccionFormulario
+        titulo="Alcance"
+        descripcion="Un contacto puede ser global o estar asociado a uno o varios proyectos."
+      >
+        <SelectorAlcance
+          global={valores.global}
+          proyectoIds={valores.proyectoIds}
+          proyectos={proyectos}
+          error={errores.proyectoIds}
+        />
+      </SeccionFormulario>
+    </>
   );
 }
 
@@ -126,26 +123,30 @@ export function FormularioContacto({
   valoresIniciales = VACIOS,
   textoEnviar,
   rutaCancelar,
+  enModal = false,
 }: Propiedades) {
   const [estado, enviar, pendiente] = useActionState(accion, {});
+  const formulario = useRef<HTMLFormElement>(null);
   const valores = estado.valores ?? valoresIniciales;
+  useFocoPrimerError(formulario, estado.errores);
 
   return (
-    <form action={enviar} className="max-w-xl space-y-4" noValidate>
+    <MarcoFormulario
+      formulario={formulario}
+      accion={enviar}
+      enModal={enModal}
+      ok={estado.ok}
+      pendiente={pendiente}
+      textoEnviar={textoEnviar}
+      rutaCancelar={rutaCancelar}
+    >
+      <ResumenErrores cantidad={Object.keys(estado.errores ?? {}).length} />
       <Campos
         key={JSON.stringify(valores)}
         valores={valores}
         errores={estado.errores ?? {}}
         proyectos={proyectos}
       />
-      <div className="flex gap-2 pt-2">
-        <Boton type="submit" cargando={pendiente}>
-          {textoEnviar}
-        </Boton>
-        <Link href={rutaCancelar} className="btn btn-ghost">
-          Cancelar
-        </Link>
-      </div>
-    </form>
+    </MarcoFormulario>
   );
 }

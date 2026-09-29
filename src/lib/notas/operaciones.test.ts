@@ -25,6 +25,8 @@ const datosNota: DatosNota = {
   proyectoId: "p1",
   fecha: new Date("2026-09-20"),
   texto: "Revisión inicial del módulo.",
+  proximoPaso: "Enviar el resumen al cliente.",
+  minutos: null,
 };
 
 beforeEach(() => {
@@ -77,15 +79,22 @@ describe("crearNota", () => {
 describe("actualizarNota", () => {
   it("devuelve null si la nota no existe", async () => {
     prisma.nota.findUnique.mockResolvedValue(null);
-    const resultado = await actualizarNota("n1", { fecha: new Date(), texto: "nuevo" });
+    const resultado = await actualizarNota("n1", {
+      fecha: new Date(),
+      texto: "nuevo",
+      proximoPaso: "Revisar de nuevo.",
+      minutos: null,
+    });
     expect(resultado).toBeNull();
   });
 
-  it("actualiza texto y fecha", async () => {
+  it("actualiza texto, próximo paso y fecha", async () => {
     prisma.nota.findUnique.mockResolvedValue({
       id: "n1",
       proyectoId: "p1",
       texto: "viejo",
+      proximoPaso: "Paso viejo",
+      minutos: null,
       fecha: new Date(),
       creadoEn: new Date(),
       actualizadoEn: new Date(),
@@ -94,9 +103,15 @@ describe("actualizarNota", () => {
     const resultado = await actualizarNota("n1", {
       fecha: new Date("2026-09-21"),
       texto: "nuevo texto",
+      proximoPaso: "Paso nuevo.",
+      minutos: 90,
     });
     expect(resultado).toEqual({ ok: true, id: "n1" });
-    expect(prisma.nota.update.mock.calls[0]![0].data.texto).toBe("nuevo texto");
+    expect(prisma.nota.update.mock.calls[0]![0].data).toMatchObject({
+      texto: "nuevo texto",
+      proximoPaso: "Paso nuevo.",
+      minutos: 90,
+    });
   });
 });
 

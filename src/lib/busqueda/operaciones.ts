@@ -99,7 +99,13 @@ async function buscarContactos(termino: string) {
 
 async function buscarNotas(termino: string) {
   const resultados = await obtenerPrisma().nota.findMany({
-    where: { texto: { contains: termino, mode: "insensitive" } },
+    where: {
+      OR: [
+        { texto: { contains: termino, mode: "insensitive" } },
+        { proximoPaso: { contains: termino, mode: "insensitive" } },
+      ],
+    },
+    orderBy: [{ fecha: "desc" }, { creadoEn: "desc" }],
     take: 20,
   });
 

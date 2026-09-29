@@ -1,12 +1,19 @@
-// Pagina de respaldo y restauracion de la base de datos
+// Página de respaldo y restauración de la base de datos
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
-import { EstadoVacio } from "@/componentes/estado-vacio";
+import { Alerta } from "@/componentes/alerta";
 import { Boton } from "@/componentes/boton";
+import { BotonEnlace } from "@/componentes/enlace";
+import { Casilla } from "@/componentes/casilla";
+import { EstadoCarga } from "@/componentes/estado-carga";
+import { EstadoVacio } from "@/componentes/estado-vacio";
+import { Icono } from "@/componentes/icono";
+import { Insignia } from "@/componentes/insignia";
 import { Modal } from "@/componentes/modal";
+import { Tarjeta } from "@/componentes/shell/tarjeta";
+import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
+import { Tabla } from "@/componentes/tabla";
 import {
   generarRespaldo,
   restaurarRespaldo,
@@ -28,6 +35,10 @@ function diasDesde(timestamp: Date): number {
   return Math.floor((ahora - fecha) / (1000 * 60 * 60 * 24));
 }
 
+const FORMATO_FECHA = new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" });
+
+type Operacion = "generando" | "restaurando" | null;
+
 export default function RespaldoPagina() {
   const [driveEstado, setDriveEstado] = useState<{
     conectado: boolean;
@@ -35,10 +46,11 @@ export default function RespaldoPagina() {
   }>({ conectado: false });
   const [respaldos, setRespaldos] = useState<Respaldo[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [generando, setGenerando] = useState(false);
+  const [operacion, setOperacion] = useState<Operacion>(null);
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(null);
   const [modalRestaurarAbierto, setModalRestaurarAbierto] = useState(false);
   const [archivoRestore, setArchivoRestore] = useState<File | null>(null);
+  const [entiendeRiesgo, setEntiendeRiesgo] = useState(false);
 
   useEffect(() => {
     Promise.all([obtenerEstadoDrive(), obtenerRespaldos()])
@@ -52,8 +64,14 @@ export default function RespaldoPagina() {
       .finally(() => setCargando(false));
   }, []);
 
+  function cerrarModal() {
+    setModalRestaurarAbierto(false);
+    setArchivoRestore(null);
+    setEntiendeRiesgo(false);
+  }
+
   async function handleGenerarRespaldo() {
-    setGenerando(true);
+    setOperacion("generando");
     setMensaje(null);
     const resultado = await generarRespaldo();
     if (resultado.ok) {
@@ -63,39 +81,37 @@ export default function RespaldoPagina() {
     } else {
       setMensaje({ tipo: "error", texto: resultado.mensaje ?? "Error al generar respaldo." });
     }
-    setGenerando(false);
+    setOperacion(null);
   }
 
   async function handleRestaurar() {
     if (!archivoRestore) return;
-    setModalRestaurarAbierto(false);
-    setGenerando(true);
+    setOperacion("restaurando");
     setMensaje(null);
     const buffer = Buffer.from(await archivoRestore.arrayBuffer());
     const resultado = await restaurarRespaldo(buffer);
     if (resultado.ok) {
-      setMensaje({ tipo: "ok", texto: "Restauracion completada correctamente." });
+      setMensaje({ tipo: "ok", texto: "Restauración completada correctamente." });
     } else {
       setMensaje({
         tipo: "error",
         texto: resultado.mensaje ?? "Error al restaurar respaldo.",
       });
     }
-    setGenerando(false);
-    setArchivoRestore(null);
+    setOperacion(null);
+    cerrarModal();
   }
 
   const ultimoRespaldo = respaldos.find((r) => r.estado === "COMPLETADO");
   const diasSinRespaldo = ultimoRespaldo ? diasDesde(ultimoRespaldo.fechaCreacion) : null;
   const avisoAntiguo = diasSinRespaldo !== null && diasSinRespaldo > 7;
+  const ocupado = operacion !== null;
 
   if (cargando) {
     return (
       <>
         <TituloSeccion modulo="Sistema" titulo="Respaldo" />
-        <div className="flex h-40 items-center justify-center">
-          <span className="loading loading-spinner loading-lg" />
-        </div>
+        <EstadoCarga filas={4} etiqueta="Cargando respaldos" />
       </>
     );
   }
@@ -108,161 +124,156 @@ export default function RespaldoPagina() {
         descripcion="Genera y restaura respaldos de la base de datos usando Google Drive."
       />
 
-      <div className="space-y-6">
-        {/* Estado de Drive */}
-        <div className="card bg-base-200">
-          <div className="card-body">
-            <h2 className="card-title text-sm">Google Drive</h2>
-            {driveEstado.conectado ? (
-              <div className="text-success flex items-center gap-2">
-                <span className="badge badge-success badge-sm">Conectado</span>
-                <span className="text-sm">Drive disponible para respaldos</span>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="text-warning flex items-center gap-2">
-                  <span className="badge badge-warning badge-sm">No conectado</span>
-                  <span className="text-sm">
-                    Drive no conectado. Conecta tu cuenta de Google en la seccion Calendario.
-                  </span>
-                </div>
-                <p className="text-base-content/60 text-sm">
-                  Para usar respaldos automaticos necesitas conectar Google Drive. Visita la seccion
-                  Calendario para conectar tu cuenta. Al reconnectar, asegúrate de otorgar el
-                  permiso &quot;Gestionar archivos de Google Drive&quot; (drive.file).
-                </p>
-                <Link href="/calendario" className="btn btn-primary btn-sm">
-                  Ir a Calendario
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="space-y-5">
+        {mensaje ? (
+          <Alerta tono={mensaje.tipo === "ok" ? "exito" : "critico"}>{mensaje.texto}</Alerta>
+        ) : null}
+        {avisoAntiguo ? (
+          <Alerta tono="atencion">
+            Han pasado {diasSinRespaldo} días desde el último respaldo. Es recomendable generar uno
+            nuevo.
+          </Alerta>
+        ) : null}
 
-        {/* Acciones */}
-        <div className="card bg-base-200">
-          <div className="card-body">
-            <h2 className="card-title text-sm">Acciones</h2>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <Tarjeta
+            titulo="Google Drive"
+            accion={
+              <Insignia tono={driveEstado.conectado ? "success" : "warning"}>
+                {driveEstado.conectado ? "Conectado" : "No conectado"}
+              </Insignia>
+            }
+          >
+            {driveEstado.conectado ? (
+              <p className="text-sm">Drive está disponible para guardar tus respaldos.</p>
+            ) : (
+              <>
+                <p className="text-sm">
+                  Para generar respaldos necesitas conectar tu cuenta de Google desde la sección
+                  Calendario.
+                </p>
+                <p className="text-suave text-sm">
+                  Al reconectar, otorga el permiso &quot;Gestionar archivos de Google Drive&quot;
+                  (drive.file).
+                </p>
+                <div>
+                  <BotonEnlace href="/calendario" variante="secundario" tamano="pequeno">
+                    Ir a Calendario
+                  </BotonEnlace>
+                </div>
+              </>
+            )}
+          </Tarjeta>
+
+          <Tarjeta titulo="Acciones">
+            <p className="text-suave text-sm">
+              El respaldo es un volcado de la base de datos que se sube a tu Drive.
+            </p>
             <div className="flex flex-wrap gap-3">
               <Boton
                 onClick={handleGenerarRespaldo}
-                disabled={!driveEstado.conectado || generando}
-                cargando={generando}
+                disabled={!driveEstado.conectado || ocupado}
+                cargando={operacion === "generando"}
               >
-                {generando ? "Generando..." : "Generar respaldo ahora"}
+                <Icono nombre="respaldo" tamano={16} />
+                {operacion === "generando" ? "Generando…" : "Generar respaldo ahora"}
               </Boton>
               <Boton
                 onClick={() => setModalRestaurarAbierto(true)}
                 variante="secundario"
-                disabled={generando}
+                disabled={ocupado}
+                cargando={operacion === "restaurando"}
               >
                 Restaurar desde archivo
               </Boton>
             </div>
-
-            {/* Mensaje de resultado */}
-            {mensaje && (
-              <div className={`alert ${mensaje.tipo === "ok" ? "alert-success" : "alert-error"}`}>
-                <span>{mensaje.texto}</span>
-              </div>
-            )}
-          </div>
+          </Tarjeta>
         </div>
 
-        {/* Aviso si hace mucho tiempo */}
-        {avisoAntiguo && (
-          <div className="alert alert-warning">
-            <span>
-              Han pasado {diasSinRespaldo} dias desde el ultimo respaldo. Es recomendable generar
-              uno nuevo.
-            </span>
-          </div>
+        {respaldos.length === 0 ? (
+          <Tarjeta titulo="Últimos respaldos">
+            <EstadoVacio
+              icono="respaldo"
+              titulo="Sin respaldos"
+              descripcion="Genera tu primer respaldo para proteger tus datos."
+            />
+          </Tarjeta>
+        ) : (
+          <Tabla titulo="Últimos respaldos" aria-label="Últimos respaldos">
+            <thead>
+              <tr>
+                <th scope="col">Fecha</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Tamaño</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {respaldos.map((r) => (
+                <tr key={r.id}>
+                  <td data-etiqueta="Fecha" className="font-mono text-sm whitespace-nowrap">
+                    {FORMATO_FECHA.format(new Date(r.fechaCreacion))}
+                  </td>
+                  <td data-etiqueta="Nombre" className="font-mono text-sm break-all">
+                    {r.nombreArchivo}
+                  </td>
+                  <td data-etiqueta="Tamaño" className="font-mono text-sm">
+                    {r.tamanoBytes ? formatoBytes(r.tamanoBytes) : "—"}
+                  </td>
+                  <td data-etiqueta="Estado">
+                    <Insignia tono={r.estado === "COMPLETADO" ? "success" : "error"}>
+                      {r.estado === "COMPLETADO" ? "Completado" : "Fallido"}
+                    </Insignia>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Tabla>
         )}
-
-        {/* Historial de respaldos */}
-        <div className="card bg-base-200">
-          <div className="card-body">
-            <h2 className="card-title text-sm">Ultimos respaldos</h2>
-            {respaldos.length === 0 ? (
-              <EstadoVacio
-                titulo="Sin respaldos"
-                descripcion="Genera tu primer respaldo para proteger tus datos."
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="table-sm table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Nombre</th>
-                      <th>Tamano</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {respaldos.map((r) => (
-                      <tr key={r.id}>
-                        <td className="text-sm">
-                          {new Date(r.fechaCreacion).toLocaleString("es-AR", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })}
-                        </td>
-                        <td className="font-mono text-sm">{r.nombreArchivo}</td>
-                        <td className="text-sm">
-                          {r.tamanoBytes ? formatoBytes(r.tamanoBytes) : "-"}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge badge-sm ${
-                              r.estado === "COMPLETADO" ? "badge-success" : "badge-error"
-                            }`}
-                          >
-                            {r.estado === "COMPLETADO" ? "OK" : "Fallido"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
-      {/* Modal de restauracion */}
       <Modal
         abierto={modalRestaurarAbierto}
-        alCerrar={() => setModalRestaurarAbierto(false)}
+        alCerrar={cerrarModal}
         titulo="Restaurar respaldo"
-      >
-        <div className="space-y-4">
-          <p className="text-sm">
-            Selecciona un archivo de respaldo (.sql o .sql.gz) para restaurar la base de datos. Esta
-            accion sobrescribe los datos actuales.
-          </p>
-          <p className="text-warning text-sm font-bold">
-            Esta accion sobreescribira los datos actuales. Confirma que tienes un respaldo reciente.
-          </p>
-          <input
-            type="file"
-            accept=".sql,.sql.gz"
-            className="file-input file-input-bordered w-full"
-            onChange={(e) => setArchivoRestore(e.target.files?.[0] ?? null)}
-          />
-          <div className="flex justify-end gap-2">
-            <Boton variante="secundario" onClick={() => setModalRestaurarAbierto(false)}>
+        descripcion="Selecciona un archivo de respaldo (.sql o .sql.gz)."
+        pie={
+          <>
+            <Boton variante="fantasma" onClick={cerrarModal} disabled={ocupado}>
               Cancelar
             </Boton>
             <Boton
+              variante="peligro"
               onClick={handleRestaurar}
-              disabled={!archivoRestore || generando}
-              cargando={generando}
+              disabled={!archivoRestore || !entiendeRiesgo || ocupado}
+              cargando={operacion === "restaurando"}
             >
               Restaurar
             </Boton>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Alerta tono="atencion">
+            Esta acción sobrescribe los datos actuales. Confirma que tienes un respaldo reciente.
+          </Alerta>
+          <div>
+            <label htmlFor="archivo-respaldo" className="mb-1.5 block text-sm font-bold">
+              Archivo de respaldo
+            </label>
+            <input
+              id="archivo-respaldo"
+              type="file"
+              accept=".sql,.sql.gz"
+              className="file-input w-full"
+              onChange={(e) => setArchivoRestore(e.target.files?.[0] ?? null)}
+            />
           </div>
+          <Casilla
+            etiqueta="Entiendo que se reemplazarán los datos actuales"
+            checked={entiendeRiesgo}
+            onChange={(e) => setEntiendeRiesgo(e.target.checked)}
+          />
         </div>
       </Modal>
     </>

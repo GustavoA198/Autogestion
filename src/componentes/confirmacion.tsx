@@ -33,6 +33,7 @@ export function Confirmacion({
       titulo={titulo}
       descripcion={mensaje}
       rol={destructivo ? "alertdialog" : "dialog"}
+      tono={destructivo ? "destructivo" : "normal"}
       pie={
         <>
           <Boton variante="fantasma" onClick={alCancelar} disabled={cargando} data-foco-inicial>

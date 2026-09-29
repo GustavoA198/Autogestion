@@ -1,5 +1,5 @@
 import type { SelectHTMLAttributes } from "react";
-import { MensajeCampo, unirClases, useCampo } from "@/componentes/campo";
+import { EtiquetaCampo, MensajeCampo, unirClases, useCampo } from "@/componentes/campo";
 
 type Propiedades = SelectHTMLAttributes<HTMLSelectElement> & {
   etiqueta: string;
@@ -19,17 +19,11 @@ export function Selector({
 }: Propiedades) {
   const { idCampo, idMensaje, descripcion } = useCampo(id, mensaje, describedBy);
   return (
-    <div className="form-control w-full">
-      <label htmlFor={idCampo} className="label">
-        <span className="label-text text-base-content">{etiqueta}</span>
-      </label>
+    <div className="w-full">
+      <EtiquetaCampo htmlFor={idCampo}>{etiqueta}</EtiquetaCampo>
       <select
         id={idCampo}
-        className={unirClases(
-          "select select-bordered w-full",
-          invalido && "select-error",
-          className,
-        )}
+        className={unirClases("select w-full", invalido && "select-error", className)}
         aria-invalid={invalido || undefined}
         aria-describedby={descripcion}
         {...resto}

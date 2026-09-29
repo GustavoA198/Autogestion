@@ -5,10 +5,13 @@ import { notFound, redirect } from "next/navigation";
 import { exigirSesion } from "@/lib/auth/sesion";
 import { actualizarProyecto, crearProyecto, eliminarProyecto } from "@/lib/proyectos/operaciones";
 import { validarProyecto, type ErroresProyecto } from "@/lib/proyectos/validacion";
+import { enModal } from "@/lib/formulario-modal";
 
 export type EstadoFormulario = {
   errores?: ErroresProyecto;
   valores?: { nombre: string; descripcion: string; enlaceDocumentacion: string };
+  // Guardado correcto en modo modal: el cliente cierra el modal en lugar de redirigir
+  ok?: boolean;
 };
 
 const ERROR_NOMBRE_DUPLICADO = "Ya existe un proyecto con ese nombre.";
@@ -46,6 +49,7 @@ export async function accionCrearProyecto(
   }
 
   revalidatePath("/proyectos");
+  if (enModal(formulario)) return { ok: true };
   redirect(`/proyectos/${resultado.id}`);
 }
 
@@ -65,7 +69,8 @@ export async function accionEditarProyecto(
     return { errores: { nombre: ERROR_NOMBRE_DUPLICADO }, valores: valoresEscritos(campos) };
   }
 
-  revalidatePath("/proyectos");
+  revalidatePath("/proyectos", "layout");
+  if (enModal(formulario)) return { ok: true };
   redirect(`/proyectos/${id}`);
 }
 

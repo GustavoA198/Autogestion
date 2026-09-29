@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { Boton } from "@/componentes/boton";
+import { BotonEnlace, Enlace } from "@/componentes/enlace";
+import { Icono } from "@/componentes/icono";
 import { Insignia } from "@/componentes/insignia";
 import { Selector } from "@/componentes/selector";
 import { Tarjeta } from "@/componentes/shell/tarjeta";
@@ -23,24 +24,31 @@ export async function SeccionCredenciales({ proyectoId }: { proyectoId: string }
     <Tarjeta
       titulo="Credenciales"
       accion={
-        <Link href="/credenciales/nueva" className="btn btn-outline btn-sm">
+        <BotonEnlace href="/credenciales/nueva" variante="secundario" tamano="pequeno">
+          <Icono nombre="mas" tamano={14} />
           Nueva
-        </Link>
+        </BotonEnlace>
       }
     >
       {credenciales.length === 0 ? (
-        <p className="text-sm opacity-70">Este proyecto aún no tiene credenciales asociadas.</p>
+        <p className="text-suave text-sm">Este proyecto aún no tiene credenciales asociadas.</p>
       ) : (
-        <ul className="divide-base-300 divide-y">
+        <ul className="lista-filas">
           {credenciales.map((credencial) => (
-            <li key={credencial.id} className="flex items-center justify-between gap-2 py-2">
+            <li
+              key={credencial.id}
+              className="tarjeta-fila flex min-h-14 items-center justify-between gap-2 px-4 py-1.5"
+            >
               <span className="flex min-w-0 items-center gap-2">
-                <Link
+                <Icono nombre="llave" tamano={16} className="text-tenue shrink-0" />
+                <Enlace
                   href={`/credenciales/${credencial.id}`}
-                  className="link link-hover truncate font-medium"
+                  discreto
+                  title={credencial.nombre}
+                  className="truncate font-bold"
                 >
                   {credencial.nombre}
-                </Link>
+                </Enlace>
                 {credencial.global ? <Insignia tono="primary">Global</Insignia> : null}
               </span>
               {credencial.global ? null : (
@@ -63,7 +71,7 @@ export async function SeccionCredenciales({ proyectoId }: { proyectoId: string }
       {vinculables.length > 0 ? (
         <form
           action={accionVincularCredencial.bind(null, proyectoId)}
-          className="flex items-end gap-2 pt-2"
+          className="border-linea-tarjeta flex flex-col gap-2 border-t pt-5 sm:flex-row sm:items-end"
         >
           <Selector etiqueta="Vincular una credencial existente" name="credencialId" required>
             <option value="">Elige una credencial</option>

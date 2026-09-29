@@ -3,10 +3,17 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useAvisos } from "@/componentes/aviso";
 import { Boton } from "@/componentes/boton";
+import { Clipboard } from "@/componentes/clipboard";
+import { Icono } from "@/componentes/icono";
 import { revelarSecreto } from "./acciones";
 
 const SEGUNDOS_VISIBLE = 15;
 const OCULTO = "••••••••••";
+
+// Sobrescribe el portapapeles del sistema con una cadena vacía para no dejar el secreto accesible
+function vaciarPortapapeles() {
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText("").catch(() => {});
+}
 
 // Solo recibe el id: el secreto se pide al servidor al revelar o copiar y no se conserva
 export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }) {
@@ -14,9 +21,12 @@ export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }
   const [pendiente, iniciar] = useTransition();
   const { notificar } = useAvisos();
 
-  const ocultar = useCallback(() => setSecreto(null), []);
+  const ocultar = useCallback(() => {
+    setSecreto(null);
+    vaciarPortapapeles();
+  }, []);
 
-  // Se oculta solo tras unos segundos y al cambiar de pestaña
+  // Se oculta solo tras unos segundos y al cambiar de pestaña, y vacía el portapapeles para no dejar el secreto accesible
   useEffect(() => {
     if (secreto === null) return;
     const temporizador = setTimeout(ocultar, SEGUNDOS_VISIBLE * 1000);
@@ -25,6 +35,7 @@ export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }
     return () => {
       clearTimeout(temporizador);
       document.removeEventListener("visibilitychange", alCambiarVisibilidad);
+      vaciarPortapapeles();
     };
   }, [secreto, ocultar]);
 
@@ -36,23 +47,18 @@ export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }
     });
   }
 
-  function copiar() {
-    iniciar(async () => {
-      const respuesta = await revelarSecreto(id);
-      if (!respuesta.ok) return notificar("No se pudo obtener el secreto.", "critico");
-      try {
-        await navigator.clipboard.writeText(respuesta.secreto);
-        notificar("Secreto copiado al portapapeles.", "exito");
-      } catch {
-        notificar("No se pudo copiar al portapapeles.", "critico");
-      }
-    });
-  }
+  // El valor se pide al copiar y no queda en el estado del componente
+  const obtenerParaCopiar = useCallback(async () => {
+    const respuesta = await revelarSecreto(id);
+    return respuesta.ok ? respuesta.secreto : null;
+  }, [id]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-x-1 gap-y-1">
       <code
-        className="bg-base-300 rounded px-2 py-1 text-sm break-all"
+        className={`bg-hundida border-linea-tarjeta mr-1 rounded-xl border px-3 py-1.5 font-mono text-sm ${
+          secreto === null ? "whitespace-nowrap" : "break-all"
+        }`}
         data-testid="valor-secreto"
         aria-live="polite"
       >
@@ -66,6 +72,7 @@ export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }
           cargando={pendiente}
           aria-label={`Revelar secreto de ${nombre}`}
         >
+          <Icono nombre="ojo" tamano={16} />
           Revelar
         </Boton>
       ) : (
@@ -75,18 +82,11 @@ export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }
           onClick={ocultar}
           aria-label={`Ocultar secreto de ${nombre}`}
         >
+          <Icono nombre="ojo-cerrado" tamano={16} />
           Ocultar
         </Boton>
       )}
-      <Boton
-        variante="fantasma"
-        tamano="pequeno"
-        onClick={copiar}
-        disabled={pendiente}
-        aria-label={`Copiar secreto de ${nombre}`}
-      >
-        Copiar
-      </Boton>
+      <Clipboard obtenerTexto={obtenerParaCopiar} etiqueta={`Copiar secreto de ${nombre}`} />
     </div>
   );
 }

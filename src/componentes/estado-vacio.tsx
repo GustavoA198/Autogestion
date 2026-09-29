@@ -10,15 +10,17 @@ type Propiedades = {
 
 export function EstadoVacio({ icono = "panel", titulo, descripcion, accion }: Propiedades) {
   return (
-    <div className="card card-border bg-base-200 shadow-sm" role="status" aria-live="polite">
-      <div className="card-body items-center gap-3 py-12 text-center">
-        <span className="bg-base-300 text-primary rounded-full p-4">
-          <Icono nombre={icono} tamano={28} />
-        </span>
-        <h2 className="card-title text-lg">{titulo}</h2>
-        <p className="max-w-sm text-sm opacity-70">{descripcion}</p>
-        {accion}
-      </div>
+    <div
+      className="estado-vacio border-linea-tarjeta bg-base-100 rounded-box flex flex-col items-center gap-2 border border-dashed px-6 py-12 text-center"
+      role="status"
+      aria-live="polite"
+    >
+      <span className="bg-primary/15 text-primary mb-1 grid size-14 place-items-center rounded-full">
+        <Icono nombre={icono} tamano={26} />
+      </span>
+      <h2 className="text-lg font-bold">{titulo}</h2>
+      <p className="text-suave max-w-sm text-sm">{descripcion}</p>
+      {accion ? <div className="mt-2">{accion}</div> : null}
     </div>
   );
 }

@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { Boton } from "@/componentes/boton";
-import { Icono } from "@/componentes/icono";
+import { Icono, type NombreIcono } from "@/componentes/icono";
 
 type Tono = "info" | "exito" | "atencion" | "critico";
 
@@ -30,11 +30,11 @@ const DURACION_MS = 5000;
 
 const ContextoAviso = createContext<Contexto | null>(null);
 
-const CLASE_TONO: Record<Tono, string> = {
-  info: "alert-info",
-  exito: "alert-success",
-  atencion: "alert-warning",
-  critico: "alert-error",
+const ESTILO_TONO: Record<Tono, { icono: NombreIcono; clase: string }> = {
+  info: { icono: "info", clase: "text-info" },
+  exito: { icono: "check-circulo", clase: "text-success" },
+  atencion: { icono: "alerta", clase: "text-warning" },
+  critico: { icono: "error", clase: "text-error" },
 };
 
 type PropiedadesItem = { aviso: Aviso; alCerrar: (id: number) => void };
@@ -53,19 +53,22 @@ function ItemAviso({ aviso, alCerrar }: PropiedadesItem) {
     if (!evento.currentTarget.contains(evento.relatedTarget)) setPausado(false);
   }
 
+  const { icono, clase } = ESTILO_TONO[aviso.tono];
+
   return (
     <div
-      className={`alert ${CLASE_TONO[aviso.tono]}`}
+      className="bg-base-100 border-linea-tarjeta shadow-flotante flex w-[22rem] max-w-full items-start gap-3 rounded-2xl border py-3 pr-2 pl-4"
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
       onFocus={() => setPausado(true)}
       onBlur={alSalirElFoco}
     >
-      <span>{aviso.mensaje}</span>
+      <Icono nombre={icono} tamano={20} className={`mt-2 ${clase}`} />
+      <span className="text-base-content flex-1 py-2 text-sm leading-snug">{aviso.mensaje}</span>
       <Boton
         variante="fantasma"
         tamano="pequeno"
-        className="btn-square"
+        className="btn-circle"
         aria-label="Cerrar aviso"
         onClick={() => alCerrar(aviso.id)}
       >

@@ -1,5 +1,8 @@
-import Link from "next/link";
+import { BarraFiltros } from "@/componentes/barra-filtros";
+import { BotonEnlace, Enlace } from "@/componentes/enlace";
+import { Entrada } from "@/componentes/entrada";
 import { EstadoVacio } from "@/componentes/estado-vacio";
+import { Icono } from "@/componentes/icono";
 import { Insignia } from "@/componentes/insignia";
 import { Selector } from "@/componentes/selector";
 import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
@@ -8,7 +11,6 @@ import { listarContactos } from "@/lib/contactos/operaciones";
 import { listarProyectos } from "@/lib/proyectos/operaciones";
 import { tiempoRelativo } from "@/lib/tiempo";
 
-export const metadata = { title: "Contactos · Autogestion" };
 export const dynamic = "force-dynamic";
 
 function primero(valor: string | string[] | undefined): string | undefined {
@@ -27,9 +29,10 @@ export default async function Contactos({ searchParams }: PageProps<"/contactos"
     listarProyectos(),
   ]);
   const botonCrear = (
-    <Link href="/contactos/nueva" className="btn btn-primary">
+    <BotonEnlace href="/contactos/nueva">
+      <Icono nombre="mas" tamano={16} />
       Nuevo contacto
-    </Link>
+    </BotonEnlace>
   );
   const listaVacia = contactos.length === 0 && !hayFiltros;
 
@@ -44,16 +47,24 @@ export default async function Contactos({ searchParams }: PageProps<"/contactos"
       {listaVacia ? (
         <EstadoVacio
           icono="usuarios"
-          titulo="Tu libreta esta vacia"
-          descripcion="Podras registrar contactos globales, de un unico proyecto o compartidos entre varios frentes."
+          titulo="Tu libreta está vacía"
+          descripcion="Podrás registrar contactos globales, de un único proyecto o compartidos entre varios frentes."
           accion={botonCrear}
         />
       ) : (
-        <div className="space-y-4">
-          <form method="get" className="flex flex-wrap items-end gap-3" aria-label="Filtros">
-            <Selector etiqueta="Buscar" name="texto" defaultValue={texto ?? ""}>
-              <option value="">Todos</option>
-            </Selector>
+        <div className="space-y-5">
+          <BarraFiltros
+            etiqueta="Filtros de contactos"
+            hayFiltros={hayFiltros}
+            rutaLimpiar="/contactos"
+          >
+            <Entrada
+              etiqueta="Buscar"
+              name="texto"
+              type="search"
+              defaultValue={texto ?? ""}
+              placeholder="Nombre, correo o empresa"
+            />
             <Selector etiqueta="Alcance" name="alcance" defaultValue={alcance ?? ""}>
               <option value="">Todos</option>
               <option value="global">Globales</option>
@@ -63,60 +74,78 @@ export default async function Contactos({ searchParams }: PageProps<"/contactos"
                 </option>
               ))}
             </Selector>
-            <button type="submit" className="btn btn-outline">
-              Filtrar
-            </button>
-            {hayFiltros ? (
-              <Link href="/contactos" className="btn btn-ghost">
-                Limpiar filtros
-              </Link>
-            ) : null}
-          </form>
+          </BarraFiltros>
           {contactos.length === 0 ? (
             <EstadoVacio
               icono="usuarios"
-              titulo="Ningun contacto coincide con los filtros"
+              titulo="Ningún contacto coincide con los filtros"
               descripcion="Prueba con otro texto o alcance, o limpia los filtros."
             />
           ) : (
-            <Tabla aria-label="Listado de contactos">
+            <Tabla apilada="ancha" aria-label="Listado de contactos">
               <thead>
                 <tr>
                   <th scope="col">Nombre</th>
                   <th scope="col">Correo</th>
                   <th scope="col">Empresa / Cargo</th>
                   <th scope="col">Alcance</th>
-                  <th scope="col">Actualizado</th>
+                  <th scope="col" className="xl:max-2xl:hidden">
+                    Actualizado
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {contactos.map((contacto) => (
                   <tr key={contacto.id}>
-                    <th scope="row" className="font-medium">
-                      <Link href={`/contactos/${contacto.id}`} className="link link-hover">
+                    <th scope="row" className="font-bold">
+                      <Enlace
+                        href={`/contactos/${contacto.id}`}
+                        discreto
+                        title={contacto.nombre}
+                        className="block max-w-56 truncate"
+                      >
                         {contacto.nombre}
-                      </Link>
+                      </Enlace>
                     </th>
-                    <td>
-                      <a href={`mailto:${contacto.correo}`} className="link link-hover">
+                    <td data-etiqueta="Correo" className="font-mono text-sm">
+                      <a
+                        href={`mailto:${contacto.correo}`}
+                        title={contacto.correo}
+                        className="enlace block max-w-64 min-w-0 truncate"
+                      >
                         {contacto.correo}
                       </a>
                     </td>
-                    <td>{contacto.empresaOCargo ?? "—"}</td>
-                    <td>
+                    <td data-etiqueta="Empresa / Cargo">
+                      <span
+                        className="block max-w-52 truncate"
+                        title={contacto.empresaOCargo ?? undefined}
+                      >
+                        {contacto.empresaOCargo ?? "—"}
+                      </span>
+                    </td>
+                    <td data-etiqueta="Alcance">
                       {contacto.global ? (
                         <Insignia tono="primary">Global</Insignia>
                       ) : contacto.proyectos.length > 0 ? (
-                        contacto.proyectos.map(({ proyecto }) => (
-                          <span key={proyecto.id} className="mr-1">
-                            {proyecto.nombre}
-                          </span>
-                        ))
+                        <span
+                          className="block max-w-48 truncate"
+                          title={contacto.proyectos
+                            .map(({ proyecto }) => proyecto.nombre)
+                            .join(", ")}
+                        >
+                          {contacto.proyectos.map(({ proyecto }) => proyecto.nombre).join(", ")}
+                        </span>
                       ) : (
                         "—"
                       )}
                     </td>
-                    <td className="whitespace-nowrap">{tiempoRelativo(contacto.actualizadoEn)}</td>
+                    <td
+                      data-etiqueta="Actualizado"
+                      className="text-suave font-mono text-xs whitespace-nowrap xl:max-2xl:hidden"
+                    >
+                      {tiempoRelativo(contacto.actualizadoEn)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -3,7 +3,7 @@ import { CLAVE_E2E, USUARIO_E2E, ipAleatoria } from "./soporte";
 
 async function iniciarSesion(page: Page, usuario: string, clave: string) {
   await page.getByLabel("Usuario").fill(usuario);
-  await page.getByLabel("Contraseña").fill(clave);
+  await page.getByLabel("Contraseña", { exact: true }).fill(clave);
   await page.getByRole("button", { name: "Entrar" }).click();
 }
 

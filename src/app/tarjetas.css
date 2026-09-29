@@ -1,0 +1,286 @@
+/* Sistema de tarjetas: superficie plana con borde, variante interactiva, fila hundida y franja de acento */
+@layer components {
+  .tarjeta {
+    background-color: var(--color-base-100);
+    border: 1px solid var(--linea-tarjeta);
+    border-radius: var(--radius-box);
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+
+  /* Interactiva: cambia borde y fondo sin mover el diseño */
+  .tarjeta-interactiva {
+    cursor: pointer;
+  }
+
+  .tarjeta-interactiva:hover {
+    border-color: color-mix(in oklab, var(--verde-texto) 45%, var(--linea-tarjeta));
+    background-color: var(--fondo-hover);
+  }
+
+  .tarjeta-interactiva:has(:focus-visible) {
+    outline: 2px solid var(--verde-texto);
+    outline-offset: 2px;
+  }
+
+  /* Acento: franja lateral de color; el texto o el icono de la tarjeta siempre la acompaña */
+  .tarjeta-acento {
+    position: relative;
+  }
+
+  .tarjeta-acento::before {
+    content: "";
+    position: absolute;
+    inset-block: -1px;
+    inset-inline-start: -1px;
+    width: 4px;
+    border-start-start-radius: var(--radius-box);
+    border-end-start-radius: var(--radius-box);
+    background-color: var(--acento, var(--verde-texto));
+    pointer-events: none;
+  }
+
+  .acento-rojo {
+    --acento: var(--color-error);
+  }
+
+  .acento-naranja {
+    --acento: var(--color-warning);
+  }
+
+  .acento-amarillo {
+    --acento: var(--semaforo-amarillo);
+  }
+
+  .acento-verde {
+    --acento: var(--color-success);
+  }
+
+  .acento-gris {
+    --acento: var(--texto-tenue);
+  }
+
+  .acento-info {
+    --acento: var(--color-info);
+  }
+
+  .acento-primario {
+    --acento: var(--verde-texto);
+  }
+
+  /* Fila hundida: subtarjeta de 16 px con fondo más profundo que la tarjeta, sin sombra */
+  .tarjeta-fila {
+    background-color: var(--fila-hundida);
+    border: 1px solid color-mix(in oklab, var(--linea-tarjeta) 70%, transparent);
+    border-radius: 1rem;
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+
+  .tarjeta-fila:hover,
+  .tarjeta-fila:focus-within {
+    background-color: var(--fondo-hover);
+  }
+
+  /* Lista de filas hundidas separadas por un hueco uniforme */
+  .lista-filas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+  }
+
+  /* Cabecera de tarjeta: título, subtítulo y acción alineada a la derecha */
+  .tarjeta-cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta,
+  .tarjeta-fila {
+    transition: none;
+  }
+}
+
+/* Fila de lista con franja lateral: fuera de capas para vencer el color de los separadores (divide) */
+.acento-fila {
+  border-inline-start: 4px solid var(--acento, var(--verde-texto));
+}
+
+/* Tarjeta de tarea: hover con borde de marca y anillo de foco solo cuando el enlace principal lo recibe */
+.tarjeta-tarea:hover {
+  border-color: color-mix(in oklab, var(--verde-texto) 45%, var(--linea-tarjeta));
+}
+
+.tarjeta-tarea:has(.tarjeta-tarea-enlace:focus-visible) {
+  outline: 2px solid var(--verde-texto);
+  outline-offset: 2px;
+}
+
+.tarjeta-tarea-enlace:focus-visible {
+  outline: none;
+}
+
+/* Botones de la tarjeta: superficie hundida y, al pasar el puntero, lima con texto oscuro (fuera de capas para vencer a .btn) */
+.btn.btn-tarjeta:not(.btn-primary, :disabled, [aria-disabled="true"]) {
+  --btn-bg: var(--fila-hundida);
+  --btn-border: var(--linea-fuerte);
+  --btn-shadow: none;
+  color: var(--color-base-content);
+}
+
+.btn.btn-tarjeta:not(.btn-primary, :disabled, [aria-disabled="true"]):hover {
+  --btn-bg: var(--fondo-hover);
+  --btn-border: var(--campo-borde);
+}
+
+.btn.btn-tarjeta.btn-tarjeta-completar:not(.btn-primary, :disabled, [aria-disabled="true"]):hover {
+  --btn-bg: var(--color-primary);
+  --btn-border: var(--borde-primario);
+  color: var(--color-primary-content);
+}
+
+/* Botones de acción de la tarjeta: solo ícono, alineados horizontalmente, color por intención al hover */
+.btn.btn-tarjeta-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 9999px;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    color 150ms;
+}
+
+.btn.btn-accion {
+  --btn-bg: var(--fila-hundida);
+  --btn-border: var(--linea-fuerte);
+  --btn-shadow: none;
+  color: var(--color-base-content);
+}
+
+.btn.btn-accion:hover:not(:disabled, [aria-disabled="true"]) {
+  --btn-border: var(--campo-borde);
+  --btn-bg: var(--fondo-hover);
+}
+
+.btn.btn-accion-primario:hover:not(:disabled, [aria-disabled="true"]) {
+  --btn-bg: color-mix(in oklab, var(--color-primary) 20%, transparent);
+  --btn-border: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn.btn-accion-info:hover:not(:disabled, [aria-disabled="true"]) {
+  --btn-bg: color-mix(in oklab, var(--color-info) 20%, transparent);
+  --btn-border: var(--color-info);
+  color: var(--color-info);
+}
+
+.btn.btn-accion-error:hover:not(:disabled, [aria-disabled="true"]) {
+  --btn-bg: color-mix(in oklab, var(--color-error) 20%, transparent);
+  --btn-border: var(--color-error);
+  color: var(--color-error);
+}
+
+/* Casilla circular de completar: el hueco de 44 px es táctil y el círculo visible mide 20 px */
+.casilla-tarea .casilla-tarea-marca {
+  border: 2px solid var(--texto-tenue);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.casilla-tarea:hover .casilla-tarea-marca {
+  border-color: var(--verde-texto);
+  background-color: color-mix(in oklab, var(--verde-texto) 12%, transparent);
+}
+
+.casilla-tarea[aria-checked="true"] .casilla-tarea-marca {
+  border-color: var(--verde-texto);
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+.casilla-tarea:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* Menú de acciones: panel en la capa superior con la única sombra permitida (overlay) */
+.menu-acciones-panel {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 0.25rem;
+  min-width: 11rem;
+  max-width: calc(100vw - 1rem);
+  overflow: visible;
+  background-color: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid var(--linea-tarjeta);
+  border-radius: 1rem;
+  box-shadow: var(--sombra-2);
+  z-index: 60;
+}
+
+/* Sin Popover API el panel es un elemento fijo normal y el estado decide si se ve */
+@supports not selector(:popover-open) {
+  .menu-acciones-panel:not([data-abierto]) {
+    display: none;
+  }
+}
+
+.menu-acciones-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.menu-acciones-item:hover,
+.menu-acciones-item:focus-visible {
+  background-color: var(--fondo-hover);
+}
+
+.menu-acciones-item:focus-visible {
+  outline-offset: -2px;
+}
+
+.menu-acciones-item-destructivo {
+  color: var(--color-error);
+}
+
+.menu-acciones-item-destructivo:hover,
+.menu-acciones-item-destructivo:focus-visible {
+  background-color: color-mix(in oklab, var(--color-error) 12%, transparent);
+}
+
+/* Lista vertical de tarjetas de tarea */
+.lista-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+}

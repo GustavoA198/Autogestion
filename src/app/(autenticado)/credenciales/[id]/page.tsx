@@ -1,6 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonEnlace, Enlace } from "@/componentes/enlace";
+import { Icono } from "@/componentes/icono";
 import { Insignia } from "@/componentes/insignia";
+import { ListaDatos } from "@/componentes/lista-datos";
 import { Tarjeta } from "@/componentes/shell/tarjeta";
 import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
 import { Tabla } from "@/componentes/tabla";
@@ -13,12 +15,6 @@ import { BotonEliminarCredencial } from "./boton-eliminar";
 export const dynamic = "force-dynamic";
 
 const FORMATO_FECHA = new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" });
-
-export async function generateMetadata({ params }: PageProps<"/credenciales/[id]">) {
-  const { id } = await params;
-  const credencial = await obtenerCredencial(id);
-  return { title: `${credencial?.nombre ?? "Credencial"} · Autogestión` };
-}
 
 export default async function FichaCredencial({ params }: PageProps<"/credenciales/[id]">) {
   const { id } = await params;
@@ -38,51 +34,72 @@ export default async function FichaCredencial({ params }: PageProps<"/credencial
         }
         accion={
           <>
-            <Link href={`/credenciales/${credencial.id}/editar`} className="btn btn-outline">
+            <BotonEnlace href={`/credenciales/${credencial.id}/editar`} variante="secundario">
+              <Icono nombre="editar" tamano={16} />
               Editar
-            </Link>
+            </BotonEnlace>
             <BotonEliminarCredencial id={credencial.id} nombre={credencial.nombre} />
           </>
         }
       />
-      <div className="space-y-6">
+      <div className="max-w-3xl space-y-5">
         <Tarjeta titulo="Datos">
-          <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-[10rem_1fr]">
-            <dt className="opacity-70">Categoría</dt>
-            <dd>
-              <Insignia tono="info" contorno>
-                {CATEGORIAS[credencial.categoria]}
-              </Insignia>
-            </dd>
-            <dt className="opacity-70">Usuario</dt>
-            <dd>{credencial.usuario ?? "—"}</dd>
-            <dt className="opacity-70">Secreto</dt>
-            <dd>
-              <SecretoCredencial id={credencial.id} nombre={credencial.nombre} />
-            </dd>
-            <dt className="opacity-70">Host o URL</dt>
-            <dd className="break-all">{credencial.host ?? "—"}</dd>
-            <dt className="opacity-70">Nota</dt>
-            <dd className="whitespace-pre-wrap">{credencial.nota ?? "—"}</dd>
-            <dt className="opacity-70">Alcance</dt>
-            <dd className="flex flex-wrap gap-2">
-              {credencial.global ? <Insignia tono="primary">Global</Insignia> : null}
-              {credencial.proyectos.map(({ proyecto }) => (
-                <Link key={proyecto.id} href={`/proyectos/${proyecto.id}`} className="link">
-                  {proyecto.nombre}
-                </Link>
-              ))}
-              {!credencial.global && credencial.proyectos.length === 0 ? (
-                <span className="opacity-70">Sin proyectos asociados</span>
-              ) : null}
-            </dd>
-          </dl>
+          <ListaDatos
+            filas={[
+              {
+                etiqueta: "Categoría",
+                valor: (
+                  <Insignia tono="info" contorno>
+                    {CATEGORIAS[credencial.categoria]}
+                  </Insignia>
+                ),
+              },
+              {
+                etiqueta: "Usuario",
+                valor: credencial.usuario ? (
+                  <span className="font-mono">{credencial.usuario}</span>
+                ) : null,
+              },
+              {
+                etiqueta: "Secreto",
+                valor: <SecretoCredencial id={credencial.id} nombre={credencial.nombre} />,
+              },
+              {
+                etiqueta: "Host o URL",
+                valor: credencial.host ? (
+                  <span className="font-mono break-all">{credencial.host}</span>
+                ) : null,
+              },
+              {
+                etiqueta: "Nota",
+                valor: credencial.nota ? (
+                  <span className="whitespace-pre-wrap">{credencial.nota}</span>
+                ) : null,
+              },
+              {
+                etiqueta: "Alcance",
+                valor:
+                  credencial.global || credencial.proyectos.length > 0 ? (
+                    <span className="flex flex-wrap items-center gap-2">
+                      {credencial.global ? <Insignia tono="primary">Global</Insignia> : null}
+                      {credencial.proyectos.map(({ proyecto }) => (
+                        <Enlace key={proyecto.id} href={`/proyectos/${proyecto.id}`}>
+                          {proyecto.nombre}
+                        </Enlace>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="text-suave">Sin proyectos asociados</span>
+                  ),
+              },
+            ]}
+          />
         </Tarjeta>
         <Tarjeta titulo="Historial de cambios">
           {credencial.historial.length === 0 ? (
-            <p className="text-sm opacity-70">Esta credencial aún no ha sido modificada.</p>
+            <p className="text-suave text-sm">Esta credencial aún no ha sido modificada.</p>
           ) : (
-            <Tabla aria-label="Historial de cambios">
+            <Tabla aria-label="Historial de cambios" sinMarco>
               <thead>
                 <tr>
                   <th scope="col">Fecha</th>
@@ -92,8 +109,10 @@ export default async function FichaCredencial({ params }: PageProps<"/credencial
               <tbody>
                 {credencial.historial.map((cambio) => (
                   <tr key={cambio.id}>
-                    <td>{FORMATO_FECHA.format(cambio.fecha)}</td>
-                    <td>{cambio.campo}</td>
+                    <td data-etiqueta="Fecha" className="font-mono text-sm">
+                      {FORMATO_FECHA.format(cambio.fecha)}
+                    </td>
+                    <td data-etiqueta="Campo modificado">{cambio.campo}</td>
                   </tr>
                 ))}
               </tbody>

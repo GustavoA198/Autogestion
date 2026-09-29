@@ -1,0 +1,276 @@
+/* Overlays: todos los diálogos y menús usan la capa superior nativa (top layer), así que quedan sobre la cabecera y el sidebar sin escala de z-index; el último en abrirse queda encima */
+:root {
+  --desenfoque-modal: 10px;
+  --duracion-modal: 180ms;
+}
+
+/* Fondo común de los modales: velo del tema con desenfoque; es la única excepción a la regla sin blur */
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  color: var(--color-base-content);
+  background-color: var(--velo-modal);
+  -webkit-backdrop-filter: blur(var(--desenfoque-modal));
+  backdrop-filter: blur(var(--desenfoque-modal));
+}
+
+.modal-fondo[open] {
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  animation: modal-fondo-entra var(--duracion-modal) ease-out both;
+}
+
+/* El velo lo pinta el propio diálogo (cubre todo el viewport), no el ::backdrop nativo */
+.modal-fondo::backdrop {
+  background: transparent;
+}
+
+/* Panel común: superficie con borde, radio de 24 px y elevación de overlay */
+.modal-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  max-height: min(calc(100dvh - 2rem), 56rem);
+  overflow: hidden;
+  background-color: var(--color-base-100);
+  border: 1px solid var(--linea-tarjeta);
+  border-radius: 1.5rem;
+  box-shadow: var(--sombra-3);
+  animation: modal-panel-entra var(--duracion-modal) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.modal-cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-shrink: 0;
+  padding: 1.25rem 1.25rem 1rem;
+}
+
+.modal-pie {
+  display: flex;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--linea-tarjeta);
+}
+
+@media (min-width: 40rem) {
+  .modal-cabecera {
+    padding: 1.5rem 1.75rem 1.25rem;
+  }
+
+  .modal-pie {
+    padding: 1rem 1.75rem;
+  }
+}
+
+/* Hoja móvil: los formularios ocupan el ancho completo, pegados abajo y respetando el área segura */
+@media (max-width: 39.99rem) {
+  .modal-fondo[data-hoja][open] {
+    padding: 0;
+    place-items: end stretch;
+  }
+
+  .modal-fondo[data-hoja] .modal-panel {
+    max-width: none;
+    max-height: calc(100dvh - max(0.75rem, env(safe-area-inset-top)));
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    border-bottom-width: 0;
+    animation-name: modal-hoja-entra;
+  }
+
+  .modal-fondo[data-hoja] .modal-pie {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .modal-fondo[data-hoja] .modal-pie > * {
+    flex: 1 1 auto;
+  }
+}
+
+@keyframes modal-fondo-entra {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-panel-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes modal-hoja-entra {
+  from {
+    opacity: 0.6;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Sin transparencias: el velo se oscurece y se quita el desenfoque */
+@media (prefers-reduced-transparency: reduce) {
+  .modal-fondo,
+  .cajon-movil::backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: color-mix(in oklab, var(--velo-modal) 70%, black);
+  }
+}
+
+/* Secciones de un formulario dentro de un modal: planas y separadas por una línea */
+.seccion-plana {
+  min-width: 0;
+  padding-block: 1.25rem;
+  border-top: 1px solid var(--linea-tarjeta);
+}
+
+.seccion-plana:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.seccion-plana:last-of-type {
+  padding-bottom: 0;
+}
+
+/* Área con scroll propio: sin barra nativa, con riel fino, líneas de borde y pista de continuación */
+.area-scroll {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.area-scroll-cuerpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.area-scroll-cuerpo::-webkit-scrollbar {
+  display: none;
+}
+
+/* El anillo de foco va hacia dentro porque el contenedor recorta lo que sale */
+.area-scroll-cuerpo:focus-visible {
+  outline-offset: -3px;
+}
+
+.area-scroll-linea {
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background-color: var(--linea-tarjeta);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.area-scroll-linea-arriba {
+  top: 0;
+}
+
+.area-scroll-linea-abajo {
+  bottom: 0;
+}
+
+.area-scroll[data-arriba] .area-scroll-linea-arriba,
+.area-scroll[data-abajo] .area-scroll-linea-abajo {
+  opacity: 1;
+}
+
+.area-scroll-riel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 3px;
+  width: 4px;
+  border-radius: 9999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.area-scroll-pulgar {
+  display: block;
+  width: 100%;
+  min-height: 1.75rem;
+  border-radius: 9999px;
+  background-color: color-mix(in oklab, var(--color-base-content) 42%, transparent);
+  transition: background-color 150ms ease;
+}
+
+.area-scroll[data-desborde] .area-scroll-riel {
+  opacity: 0.55;
+}
+
+.area-scroll[data-desborde][data-desplazando] .area-scroll-riel,
+.area-scroll[data-desborde]:hover .area-scroll-riel {
+  opacity: 1;
+}
+
+.area-scroll[data-desborde][data-desplazando] .area-scroll-pulgar,
+.area-scroll[data-desborde]:hover .area-scroll-pulgar {
+  background-color: color-mix(in oklab, var(--color-base-content) 62%, transparent);
+}
+
+/* Pista de que hay más contenido debajo: desaparece al llegar al final */
+.area-scroll-pista {
+  position: absolute;
+  inset-block-end: 0.75rem;
+  inset-inline-end: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+  background-color: var(--color-base-100);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 9999px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.area-scroll[data-abajo] .area-scroll-pista {
+  opacity: 1;
+  transform: none;
+}

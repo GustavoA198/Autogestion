@@ -3,16 +3,14 @@
 import { useState, useTransition } from "react";
 import { Modal } from "@/componentes/modal";
 import { Boton } from "@/componentes/boton";
+import { Casilla } from "@/componentes/casilla";
+import { EstadoError } from "@/componentes/estado-error";
+import { Icono } from "@/componentes/icono";
 import { Insignia } from "@/componentes/insignia";
+import { Selector } from "@/componentes/selector";
+import { FRECUENCIA_LABEL } from "@/lib/tareas/presentacion";
 import { accionClonarTareas } from "./clonar-tareas-acciones";
 import type { TareaUI } from "@/lib/tareas/operaciones";
-
-const FRECUENCIA_LABEL: Record<string, string> = {
-  DIARIA: "Diaria",
-  SEMANAL: "Semanal",
-  MENSUAL: "Mensual",
-  PUNTUAL: "Puntual",
-};
 
 type Propiedades = {
   proyectoId: string;
@@ -64,7 +62,8 @@ export function ClonarTareas({ proyectoId, proyectos, tareas }: Propiedades) {
 
   return (
     <>
-      <Boton variante="secundario" tamano="pequeno" onClick={() => setAbierto(true)}>
+      <Boton variante="fantasma" tamano="pequeno" onClick={() => setAbierto(true)}>
+        <Icono nombre="copiar" tamano={14} />
         Clonar tareas
       </Boton>
 
@@ -89,60 +88,59 @@ export function ClonarTareas({ proyectoId, proyectos, tareas }: Propiedades) {
           </>
         }
       >
-        <div className="space-y-4">
-          {error && (
-            <div className="alert alert-error text-sm" role="alert">
-              {error}
-            </div>
-          )}
+        <div className="space-y-5">
+          {error ? <EstadoError titulo="No se pudo clonar" mensaje={error} /> : null}
+
+          <Selector
+            etiqueta="Proyecto destino"
+            value={destinoId}
+            onChange={(e) => setDestinoId(e.target.value)}
+            mensaje={
+              otrosProyectos.length === 0 ? "No hay otros proyectos disponibles." : undefined
+            }
+          >
+            <option value="">Selecciona un proyecto…</option>
+            {otrosProyectos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
+          </Selector>
 
           <fieldset>
-            <legend className="mb-2 text-sm font-medium">Proyecto destino</legend>
-            <select
-              className="select select-bordered w-full"
-              value={destinoId}
-              onChange={(e) => setDestinoId(e.target.value)}
-            >
-              <option value="">Selecciona un proyecto…</option>
-              {otrosProyectos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
-          </fieldset>
-
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">
+            <legend className="mb-1.5 text-sm font-medium">
               Tareas recurrentes ({tareasDisponibles.length})
             </legend>
             {tareasDisponibles.length === 0 ? (
-              <p className="text-sm opacity-70">Este proyecto no tiene tareas recurrentes.</p>
+              <p className="text-suave text-sm">Este proyecto no tiene tareas recurrentes.</p>
             ) : (
-              <ul className="max-h-60 space-y-2 overflow-y-auto">
-                {tareasDisponibles.map((tarea) => (
-                  <li key={tarea.id}>
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="checkbox checkbox-sm"
+              <div className="bg-hundida border-linea-tarjeta rounded-2xl border p-2">
+                <ul className="divide-linea-tarjeta/60 divide-y">
+                  {tareasDisponibles.map((tarea) => (
+                    <li key={tarea.id} className="flex items-center justify-between gap-2 pr-2">
+                      <Casilla
+                        etiqueta={tarea.titulo}
                         checked={seleccionadas.has(tarea.id)}
                         onChange={() => alternarTarea(tarea.id)}
                       />
-                      <span className="flex-1 text-sm">{tarea.titulo}</span>
                       <Insignia tono="info" contorno>
                         {FRECUENCIA_LABEL[tarea.tipoFrecuencia]}
                       </Insignia>
-                    </label>
-                  </li>
-                ))}
-              </ul>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </fieldset>
 
-          {seleccionadas.size > 0 && destinoId && (
-            <div className="alert alert-info text-sm">{confirmacion(seleccionadas.size)}</div>
-          )}
+          {seleccionadas.size > 0 && destinoId ? (
+            <p
+              role="status"
+              className="border-info/30 bg-info/8 text-info rounded-2xl border px-4 py-3 text-sm"
+            >
+              {confirmacion(seleccionadas.size)}
+            </p>
+          ) : null}
         </div>
       </Modal>
     </>

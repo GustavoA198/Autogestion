@@ -1,14 +1,10 @@
-// Bloque de tareas del dia con checkbox para marcar completada.
-// Es "use client" porque necesita interactividad (checkbox) y revalidatePath.
+// Bloque de tareas del día con tarjetas compactas: casilla, semáforo y menú de acciones.
 
-"use client";
-
-import { useTransition } from "react";
-import Link from "next/link";
-import { Tarjeta } from "@/componentes/shell/tarjeta";
 import { EstadoError } from "@/componentes/estado-error";
 import { EstadoVacio } from "@/componentes/estado-vacio";
-import { accionCompletarTarea } from "@/app/(autenticado)/tareas/acciones";
+import { Enlace } from "@/componentes/enlace";
+import { Tarjeta } from "@/componentes/shell/tarjeta";
+import { TarjetaTarea } from "@/componentes/tarea/tarjeta-tarea";
 import type { TareaDelDia } from "./dashboard-data";
 
 type Props = {
@@ -16,51 +12,46 @@ type Props = {
   puntuales: TareaDelDia[];
 };
 
-function TareaFila({ tarea }: { tarea: TareaDelDia }) {
-  const [pending, startTransition] = useTransition();
-
-  function marcar() {
-    startTransition(async () => {
-      await accionCompletarTarea(tarea.id);
-    });
-  }
-
+function GrupoTareas({
+  id,
+  titulo,
+  tareas,
+}: {
+  id: string;
+  titulo: string;
+  tareas: TareaDelDia[];
+}) {
+  if (tareas.length === 0) return null;
   return (
-    <li className="flex items-center gap-3 py-2">
-      <input
-        type="checkbox"
-        className="checkbox checkbox-primary checkbox-sm"
-        checked={false}
-        onChange={marcar}
-        disabled={pending}
-        aria-label={`Marcar "${tarea.titulo}" como completada`}
-      />
-      <span className={pending ? "opacity-50" : ""}>{tarea.titulo}</span>
-      {tarea.proyecto && (
-        <Link
-          href={`/proyectos/${tarea.proyecto.id}`}
-          className="badge badge-ghost badge-sm ml-auto text-xs"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {tarea.proyecto.nombre}
-        </Link>
-      )}
-    </li>
+    <section aria-labelledby={id}>
+      <h3 id={id} className="text-suave mb-2 text-xs font-bold tracking-wide uppercase">
+        {titulo}
+      </h3>
+      <ul className="lista-filas">
+        {tareas.map((t) => (
+          <TarjetaTarea
+            key={t.id}
+            tarea={t}
+            semaforo={t.semaforo}
+            variante="compacta"
+            nivelTitulo={4}
+            marcable
+            completadaHoy={t.completadaHoy}
+          />
+        ))}
+      </ul>
+    </section>
   );
 }
 
 export function BloqueTareas({ recurrentes, puntuales }: Props) {
-  const hayRecurrentes = recurrentes.length > 0;
-  const hayPuntuales = puntuales.length > 0;
-  const total = recurrentes.length + puntuales.length;
-
-  if (total === 0) {
+  if (recurrentes.length + puntuales.length === 0) {
     return (
       <Tarjeta titulo="Tareas del día">
         <EstadoVacio
           icono="lista"
           titulo="Sin tareas para hoy"
-          descripcion="No hay tareas recurrentes ni puntuales programadas para este día."
+          descripcion="No hay tareas fijas ni puntuales programadas para este día."
         />
       </Tarjeta>
     );
@@ -70,44 +61,13 @@ export function BloqueTareas({ recurrentes, puntuales }: Props) {
     <Tarjeta
       titulo="Tareas del día"
       accion={
-        <Link href="/tareas" className="btn btn-ghost btn-xs">
+        <Enlace href="/tareas" className="text-sm">
           Ver todas
-        </Link>
+        </Enlace>
       }
     >
-      {hayRecurrentes && (
-        <section aria-labelledby="tareas-recurrentes-heading">
-          <h3
-            id="tareas-recurrentes-heading"
-            className="text-base-content/60 mb-2 text-xs font-semibold uppercase"
-          >
-            Fijas
-          </h3>
-          <ul className="divide-base-300 space-y-1 divide-y">
-            {recurrentes.map((t) => (
-              <TareaFila key={t.id} tarea={t} />
-            ))}
-          </ul>
-        </section>
-      )}
-      {hayPuntuales && (
-        <section
-          aria-labelledby="tareas-puntuales-heading"
-          className={hayRecurrentes ? "mt-4" : ""}
-        >
-          <h3
-            id="tareas-puntuales-heading"
-            className="text-base-content/60 mb-2 text-xs font-semibold uppercase"
-          >
-            Puntuales
-          </h3>
-          <ul className="divide-base-300 space-y-1 divide-y">
-            {puntuales.map((t) => (
-              <TareaFila key={t.id} tarea={t} />
-            ))}
-          </ul>
-        </section>
-      )}
+      <GrupoTareas id="tareas-recurrentes-heading" titulo="Fijas" tareas={recurrentes} />
+      <GrupoTareas id="tareas-puntuales-heading" titulo="Puntuales" tareas={puntuales} />
     </Tarjeta>
   );
 }

@@ -1,19 +1,20 @@
-import Link from "next/link";
+import { BotonEnlace, Enlace } from "@/componentes/enlace";
 import { EstadoVacio } from "@/componentes/estado-vacio";
+import { Icono } from "@/componentes/icono";
 import { Tabla } from "@/componentes/tabla";
 import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
 import { listarProyectos } from "@/lib/proyectos/operaciones";
 import { EnlaceDocumentacion } from "./enlace-documentacion";
 
-export const metadata = { title: "Proyectos · Autogestión" };
 export const dynamic = "force-dynamic";
 
 export default async function Proyectos() {
   const proyectos = await listarProyectos();
   const botonCrear = (
-    <Link href="/proyectos/nuevo" className="btn btn-primary">
+    <BotonEnlace href="/proyectos/nuevo">
+      <Icono nombre="mas" tamano={16} />
       Nuevo proyecto
-    </Link>
+    </BotonEnlace>
   );
 
   return (
@@ -32,7 +33,7 @@ export default async function Proyectos() {
           accion={botonCrear}
         />
       ) : (
-        <Tabla aria-label="Listado de proyectos">
+        <Tabla apilada="ancha" aria-label="Listado de proyectos">
           <thead>
             <tr>
               <th scope="col">Nombre</th>
@@ -43,17 +44,29 @@ export default async function Proyectos() {
           <tbody>
             {proyectos.map((proyecto) => (
               <tr key={proyecto.id}>
-                <th scope="row" className="font-medium">
-                  <Link href={`/proyectos/${proyecto.id}`} className="link link-hover">
+                <th scope="row" className="font-bold">
+                  <Enlace
+                    href={`/proyectos/${proyecto.id}`}
+                    discreto
+                    title={proyecto.nombre}
+                    className="block max-w-64 truncate"
+                  >
                     {proyecto.nombre}
-                  </Link>
+                  </Enlace>
                 </th>
-                <td className="max-w-xs truncate">{proyecto.descripcion ?? "—"}</td>
-                <td>
+                <td data-etiqueta="Descripción">
+                  <span
+                    className="block max-w-xs truncate"
+                    title={proyecto.descripcion ?? undefined}
+                  >
+                    {proyecto.descripcion ?? "—"}
+                  </span>
+                </td>
+                <td data-etiqueta="Documentación">
                   {proyecto.enlaceDocumentacion ? (
                     <EnlaceDocumentacion url={proyecto.enlaceDocumentacion} />
                   ) : (
-                    "—"
+                    <span className="text-tenue">Sin enlace</span>
                   )}
                 </td>
               </tr>
