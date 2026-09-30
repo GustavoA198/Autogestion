@@ -8,8 +8,6 @@ import {
 } from "@/lib/env";
 
 const AUTH_VALIDO = {
-  AUTH_USUARIO: "gustavo",
-  AUTH_CLAVE_HASH: "scrypt:15:8:3:c2FsdA:aGFzaA",
   NEXTAUTH_SECRET: "x".repeat(32),
   NEXTAUTH_URL: "http://localhost:3000",
 };
@@ -57,9 +55,7 @@ describe("leerEntornoAuth", () => {
   });
 
   it("nombra todas las variables ausentes", () => {
-    expect(() => leerEntornoAuth({})).toThrow(
-      /AUTH_USUARIO.*AUTH_CLAVE_HASH.*NEXTAUTH_SECRET.*NEXTAUTH_URL/,
-    );
+    expect(() => leerEntornoAuth({})).toThrow(/NEXTAUTH_SECRET.*NEXTAUTH_URL/);
   });
 
   it("rechaza un secreto de sesión corto", () => {
@@ -68,16 +64,21 @@ describe("leerEntornoAuth", () => {
     );
   });
 
-  it("rechaza un hash que no tiene el formato esperado", () => {
-    expect(() =>
-      leerEntornoAuth({ ...AUTH_VALIDO, AUTH_CLAVE_HASH: "clave-en-texto-plano" }),
-    ).toThrow(/AUTH_CLAVE_HASH/);
+  it("ignora las credenciales del diseño anterior y no las devuelve", () => {
+    const entorno = leerEntornoAuth({
+      ...AUTH_VALIDO,
+      AUTH_USUARIO: "gustavo",
+      AUTH_CLAVE_HASH: "clave-en-texto-plano",
+    });
+
+    expect(entorno).toEqual(AUTH_VALIDO);
   });
 
   it("no incluye los valores en el mensaje de error", () => {
-    expect(() =>
-      leerEntornoAuth({ ...AUTH_VALIDO, AUTH_CLAVE_HASH: "clave-en-texto-plano" }),
-    ).toThrow(expect.objectContaining({ message: expect.not.stringContaining("texto-plano") }));
+    const secreto = "clave-en-texto-plano";
+    expect(() => leerEntornoAuth({ NEXTAUTH_SECRET: secreto, NEXTAUTH_URL: "no-es-una-url" })).toThrow(
+      expect.objectContaining({ message: expect.not.stringContaining(secreto) }),
+    );
   });
 });
 

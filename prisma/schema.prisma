@@ -17,6 +17,17 @@ model IntentoAcceso {
   @@map("intento_acceso")
 }
 
+// Usuario de acceso a la aplicación; la contraseña nunca se guarda, solo su hash scrypt
+model Usuario {
+  id            String   @id @default(cuid())
+  nombre        String   @unique
+  claveHash     String   @map("clave_hash")
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  @@map("usuario")
+}
+
 // Frente de trabajo: ficha liviana con enlace a su documentación real
 model Proyecto {
   id                  String               @id @default(cuid())
