@@ -8,8 +8,37 @@ import { ErrorCalendario } from "./proveedor";
 
 const USUARIO_ID = "unico";
 
-// Subir cientos de reuniones desde otra región excede el default de 5 s de Prisma
+// Cada operación viaja a la base de datos y vuelve; un lote grande se pasa del timeout
+const LOTE_OPERACIONES = 40;
+
+// Margen sobre el default de 5 s de Prisma para el lote más lleno
 const TIMEOUT_TRANSACCION_MS = 30_000;
+
+type ClientePrisma = ReturnType<typeof obtenerPrisma>;
+
+// Reparte las operaciones enTransactions acotadas; el cierre va en la última para no marcar antes de terminar
+async function aplicarPorLotes(
+  prisma: ClientePrisma,
+  operaciones: Prisma.PrismaPromise<unknown>[],
+  cierre: Prisma.PrismaPromise<unknown>[],
+): Promise<unknown[]> {
+  const lotes: Prisma.PrismaPromise<unknown>[][] = [];
+  for (let i = 0; i < operaciones.length; i += LOTE_OPERACIONES) {
+    lotes.push(operaciones.slice(i, i + LOTE_OPERACIONES));
+  }
+  // Sin operaciones solo queda el cierre, que igual tiene que aplicarse
+  if (lotes.length === 0) {
+    return (await prisma.$transaction(cierre, { timeout: TIMEOUT_TRANSACCION_MS })) ?? [];
+  }
+  const resultados: unknown[] = [];
+  for (const [indice, lote] of lotes.entries()) {
+    const contenido = indice === lotes.length - 1 ? [...lote, ...cierre] : lote;
+    resultados.push(
+      ...((await prisma.$transaction(contenido, { timeout: TIMEOUT_TRANSACCION_MS })) ?? []),
+    );
+  }
+  return resultados;
+}
 
 // Serializa sincronizaciones por cuenta: dos llamadas en paralelo pisarían el syncToken y perderían upserts
 const COLA_SINCRONIZACION = new Map<string, Promise<unknown>>();
@@ -181,17 +210,15 @@ export async function sincronizarCalendario(
           })
         : null;
 
-      // Todo va en una transacción: el token nuevo solo se guarda si los cambios se aplicaron
-      const operaciones = [
-        ...upserts,
+      // El token nuevo solo se guarda si todos los cambios se aplicaron, por eso va en el cierre
+      const cierre = [
         ...(borrados ? [borrados] : []),
         ...(obsoletas ? [obsoletas] : []),
         marcarSincronizada(cambios.nextSyncToken),
       ];
-      const resultados =
-        (await prisma.$transaction(operaciones, { timeout: TIMEOUT_TRANSACCION_MS })) ?? [];
+      const resultados = await aplicarPorLotes(prisma, upserts, cierre);
       const eliminadas = resultados
-        .slice(upserts.length, operaciones.length - 1)
+        .slice(upserts.length, resultados.length - 1)
         .reduce((total: number, r) => total + ((r as { count?: number } | null)?.count ?? 0), 0);
       const cantidad = upserts.length + eliminadas;
       return {
@@ -222,9 +249,7 @@ export async function sincronizarCalendario(
       },
     });
 
-    await prisma.$transaction([...eventos.map(upsertDe), obsoletas, marcarSincronizada()], {
-      timeout: TIMEOUT_TRANSACCION_MS,
-    });
+    await aplicarPorLotes(prisma, eventos.map(upsertDe), [obsoletas, marcarSincronizada()]);
     return {
       cantidad: eventos.length,
       huboCambios: true,
