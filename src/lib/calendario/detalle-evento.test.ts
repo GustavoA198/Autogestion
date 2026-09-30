@@ -6,7 +6,7 @@ import { mapearEventoGraph } from "./microsoft/proveedor-microsoft";
 import { sincronizarReuniones } from "./operaciones";
 
 const prismaMock = vi.hoisted(() => ({
-  cuentaCalendario: { findUnique: vi.fn() },
+  cuentaCalendario: { findUnique: vi.fn(), update: vi.fn() },
   reunion: { upsert: vi.fn((a: unknown) => a), deleteMany: vi.fn((a: unknown) => a) },
   $transaction: vi.fn(),
 }));
