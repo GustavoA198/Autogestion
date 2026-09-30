@@ -8,6 +8,9 @@ import { ErrorCalendario } from "./proveedor";
 
 const USUARIO_ID = "unico";
 
+// Subir cientos de reuniones desde otra región excede el default de 5 s de Prisma
+const TIMEOUT_TRANSACCION_MS = 30_000;
+
 // Serializa sincronizaciones por cuenta: dos llamadas en paralelo pisarían el syncToken y perderían upserts
 const COLA_SINCRONIZACION = new Map<string, Promise<unknown>>();
 
@@ -185,7 +188,8 @@ export async function sincronizarCalendario(
         ...(obsoletas ? [obsoletas] : []),
         marcarSincronizada(cambios.nextSyncToken),
       ];
-      const resultados = (await prisma.$transaction(operaciones)) ?? [];
+      const resultados =
+        (await prisma.$transaction(operaciones, { timeout: TIMEOUT_TRANSACCION_MS })) ?? [];
       const eliminadas = resultados
         .slice(upserts.length, operaciones.length - 1)
         .reduce((total: number, r) => total + ((r as { count?: number } | null)?.count ?? 0), 0);
@@ -218,7 +222,9 @@ export async function sincronizarCalendario(
       },
     });
 
-    await prisma.$transaction([...eventos.map(upsertDe), obsoletas, marcarSincronizada()]);
+    await prisma.$transaction([...eventos.map(upsertDe), obsoletas, marcarSincronizada()], {
+      timeout: TIMEOUT_TRANSACCION_MS,
+    });
     return {
       cantidad: eventos.length,
       huboCambios: true,
