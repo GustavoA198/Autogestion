@@ -20,7 +20,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
-    "auth:configurar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/configurar-acceso.mts",
+    "usuario:crear": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/cargador.mjs",
     "cifrado:configurar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/configurar-cifrado.mts"
   },
   "dependencies": {
@@ -51,6 +51,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "jsdom": "^30.1.1",
+    "jiti": "2.7.0",
     "prettier": "3.9.9",
     "prettier-plugin-tailwindcss": "0.8.1",
     "prisma": "7.10.0",

@@ -21,3 +21,13 @@ export function actualizarEnv(contenido: string, pares: Record<string, string>):
 export function leerVariable(contenido: string, nombre: string): string | undefined {
   return new RegExp(`^${nombre}=(.*)$`, "m").exec(contenido)?.[1]?.trim() || undefined;
 }
+
+// Borra la línea completa de cada variable, para que no quede su valor en el archivo
+export function eliminarVariables(contenido: string, nombres: string[]): string {
+  const saltoDeLinea = contenido.includes("\r\n") ? "\r\n" : "\n";
+  const lineas = contenido === "" ? [] : contenido.replace(/\r?\n$/, "").split(/\r?\n/);
+  const descartadas = new Set(nombres);
+
+  const restantes = lineas.filter((linea) => !descartadas.has(/^([A-Z0-9_]+)=/.exec(linea)?.[1] ?? ""));
+  return restantes.join(saltoDeLinea) + saltoDeLinea;
+}

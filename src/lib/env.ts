@@ -2,8 +2,6 @@ import { z } from "zod";
 
 type Fuente = Record<string, string | undefined>;
 
-const FORMATO_HASH = /^scrypt:\d+:\d+:\d+:[\w-]+:[\w-]+$/;
-
 const esquemaBaseDatos = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, "debe ser una URL de PostgreSQL"),
   // Solo para migraciones: evita pooling de pgbouncer en Vercel
@@ -13,11 +11,8 @@ const esquemaBaseDatos = z.object({
     .optional(),
 });
 
+// El usuario y su contraseña viven en la tabla usuario, no en el entorno
 const esquemaAuth = z.object({
-  AUTH_USUARIO: z.string().min(3, "mínimo 3 caracteres"),
-  AUTH_CLAVE_HASH: z
-    .string()
-    .regex(FORMATO_HASH, "no tiene el formato generado por auth:configurar"),
   NEXTAUTH_SECRET: z.string().min(32, "mínimo 32 caracteres"),
   NEXTAUTH_URL: z.url("debe ser una URL válida"),
 });

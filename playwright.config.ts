@@ -1,11 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
-import { ARCHIVO_SESION, HASH_E2E, USUARIO_E2E } from "./e2e/soporte";
+import { ARCHIVO_SESION } from "./e2e/soporte";
 
 const PUERTO = 3100;
 const URL_BASE = `http://127.0.0.1:${PUERTO}`;
 
 export default defineConfig({
   testDir: "e2e",
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -36,10 +37,8 @@ export default defineConfig({
     url: `${URL_BASE}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    // Acceso de pruebas independiente del que haya configurado el usuario en .env
+    // El usuario de pruebas lo crea global-setup en la base, no el entorno
     env: {
-      AUTH_USUARIO: USUARIO_E2E,
-      AUTH_CLAVE_HASH: HASH_E2E,
       NEXTAUTH_SECRET: "secreto-solo-para-pruebas-e2e-".repeat(2),
       NEXTAUTH_URL: URL_BASE,
     },
