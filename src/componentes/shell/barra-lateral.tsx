@@ -38,6 +38,10 @@ export const GRUPOS_NAVEGACION: GrupoSecciones[] = [
     titulo: "Análisis",
     secciones: [{ ruta: "/estadisticas", etiqueta: "Estadísticas", icono: "grafica" }],
   },
+  {
+    titulo: "Ajustes",
+    secciones: [{ ruta: "/cuenta", etiqueta: "Mi cuenta", icono: "candado" }],
+  },
 ];
 
 export const SECCIONES_PRINCIPALES: EnlaceSeccion[] = GRUPOS_NAVEGACION.flatMap(

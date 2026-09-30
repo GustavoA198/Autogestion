@@ -25,11 +25,11 @@ La aplicacion se despliega en Vercel con PostgreSQL gestionado (Supabase o Neon)
 cp .env.example .env
 # Edita .env y cambia POSTGRES_PASSWORD (y la misma clave dentro de DATABASE_URL)
 npm install
-npm run auth:configurar
+npm run usuario:crear
 npm run cifrado:configurar
 ```
 
-`npm run auth:configurar` es interactivo: pide el usuario y la contraseña (mínimo 12 caracteres, sin mostrarla en pantalla), guarda solo su hash en `.env` y genera el secreto de sesión. Repítelo para cambiar la contraseña.
+`npm run usuario:crear` es interactivo: pide el usuario y la contraseña (mínimo 12 caracteres, sin mostrarla en pantalla) y los guarda **en la base de datos**, nunca en el código ni en `.env`. La contraseña se almacena solo como hash scrypt. Al volver a ejecutarlo con el mismo usuario se ofrece reemplazar su contraseña: esa es la vía de recuperación si te quedas sin acceso. El comando también genera `NEXTAUTH_SECRET` en `.env` si falta.
 
 ## Cifrado de credenciales
 
@@ -41,7 +41,9 @@ npm run cifrado:configurar
 ## Acceso y seguridad
 
 - Toda la aplicación exige sesión; solo `/login`, `/api/auth/*` y `/api/health` son públicas. Sin sesión, las páginas redirigen a `/login` y la API responde 401.
+- El usuario y su contraseña viven en la tabla `usuario` de PostgreSQL, no en variables de entorno. Cambiar la contraseña se hace en `/cuenta`; si te quedas sin acceso, `npm run usuario:crear` la restablece.
 - La contraseña se guarda como hash `scrypt`; nunca en texto plano. La sesión dura 12 horas y viaja en una cookie `httpOnly` (`secure` cuando la aplicación se sirve por HTTPS).
+- Ojo: cambiar la contraseña no cierra las sesiones ya abiertas; la nueva empieza a usarse en el siguiente ingreso, tras vencer la cookie.
 - Los intentos de acceso se limitan a 5 por IP cada 15 minutos (y 100 en total), con el conteo guardado en PostgreSQL.
 - Si se pierde `NEXTAUTH_SECRET` solo se cierran las sesiones abiertas; basta con generar otro.
 - Detrás de un proxy, la IP se toma de `x-forwarded-for`: la plataforma de despliegue debe fijar esa cabecera.
@@ -87,7 +89,7 @@ Los tokens de diseño (color, tipografía, radios, sombras y foco) viven en `src
 | `npm test`                   | Pruebas unitarias                                               |
 | `npm run test:coverage`      | Pruebas unitarias con cobertura                                 |
 | `npm run test:e2e`           | Pruebas de extremo a extremo (requiere la base de datos)        |
-| `npm run auth:configurar`    | Define usuario y contraseña de acceso en `.env`                 |
+| `npm run usuario:crear`      | Crea el usuario de acceso en la base (recupera si ya existe)    |
 | `npm run cifrado:configurar` | Genera `CLAVE_CIFRADO` en `.env` sin sobrescribir una existente |
 | `npm run db:migrate`         | Crea y aplica una migración en desarrollo                       |
 | `npm run db:deploy`          | Aplica las migraciones pendientes                               |

@@ -1,13 +1,12 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
-import { igualesSeguro, verificarClave } from "@/lib/auth/clave";
 import { obtenerIp, registrarIntento, reiniciarIntentos } from "@/lib/auth/limitador";
 import { leerEntornoAuth, esProduccion } from "@/lib/env";
+import { verificarCredenciales } from "@/lib/usuarios/operaciones";
 
 export const DURACION_SESION_SEGUNDOS = 12 * 60 * 60;
 export const ERROR_ACCESO_BLOQUEADO = "AccesoBloqueado";
-const ID_USUARIO_UNICO = "usuario-unico";
 
 const esquemaAcceso = z.object({
   usuario: z.string().min(1).max(100),
@@ -25,19 +24,27 @@ export async function autorizar(credenciales: unknown, solicitud: Solicitud) {
   const entrada = esquemaAcceso.safeParse(credenciales);
   if (!entrada.success) return null;
 
-  const entorno = leerEntornoAuth();
-  const claveCorrecta = await verificarClave(entrada.data.clave, entorno.AUTH_CLAVE_HASH);
-  const usuarioCorrecto = igualesSeguro(entrada.data.usuario, entorno.AUTH_USUARIO);
-  if (!claveCorrecta || !usuarioCorrecto) return null;
+  // Falla pronto con un mensaje claro si falta NEXTAUTH_SECRET o NEXTAUTH_URL
+  leerEntornoAuth();
+
+  const resultado = await verificarCredenciales(entrada.data.usuario, entrada.data.clave);
+  if (!resultado.ok) return null;
 
   await reiniciarIntentos(ip);
-  return { id: ID_USUARIO_UNICO, name: entorno.AUTH_USUARIO };
+  return { id: resultado.usuario.id, name: resultado.usuario.nombre };
 }
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: DURACION_SESION_SEGUNDOS },
   jwt: { maxAge: DURACION_SESION_SEGUNDOS },
   pages: { signIn: "/login", error: "/login" },
+  callbacks: {
+    // Con estrategia JWT el id no viaja solo a la sesión; el cambio de contraseña lo necesita
+    session: ({ session, token }) => {
+      if (token.sub) session.user.id = token.sub;
+      return session;
+    },
+  },
   cookies: {
     sessionToken: {
       name: esProduccion() ? "__Secure-next-auth.session-token" : "next-auth.session-token",

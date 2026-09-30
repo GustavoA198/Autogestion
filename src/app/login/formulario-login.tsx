@@ -6,11 +6,13 @@ import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { Boton } from "@/componentes/boton";
 import { Entrada } from "@/componentes/entrada";
 import { Icono } from "@/componentes/icono";
+import { usuarioConfigurado } from "./acciones";
 
 const MENSAJES: Record<string, string> = {
   AccesoBloqueado: "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
 };
 const MENSAJE_GENERICO = "Usuario o contraseña incorrectos.";
+const MENSAJE_SIN_USUARIO = "Todavía no hay un usuario en la base. Ejecuta npm run usuario:crear.";
 const ID_ERROR = "error-acceso";
 
 const sinSuscripcion = () => () => {};
@@ -48,7 +50,12 @@ export function FormularioLogin({ destino }: { destino: string }) {
       return;
     }
 
-    setError((resultado?.error && MENSAJES[resultado.error]) || MENSAJE_GENERICO);
+    // Solo cuando el acceso falla se consulta si falta crear el usuario: no añade latencia ni filtra nada
+    if (resultado?.error && MENSAJES[resultado.error]) {
+      setError(MENSAJES[resultado.error]);
+    } else {
+      setError((await usuarioConfigurado()) ? MENSAJE_GENERICO : MENSAJE_SIN_USUARIO);
+    }
     setEnviando(false);
   }
 
