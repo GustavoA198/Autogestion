@@ -2,8 +2,10 @@
 
 import { Boton } from "@/componentes/boton";
 import { EstadoError } from "@/componentes/estado-error";
+import { useRegistrarError } from "@/lib/errores/registro";
 
-export default function ErrorCredenciales({ reset }: { error: Error; reset: () => void }) {
+export default function ErrorCredenciales({ error, reset }: { error: Error; reset: () => void }) {
+  useRegistrarError(error, "credenciales");
   return (
     <EstadoError
       titulo="No se pudieron cargar las credenciales"
