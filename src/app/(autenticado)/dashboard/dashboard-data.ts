@@ -36,7 +36,8 @@ export async function cargarReunionesHoy(): Promise<ResultadoReuniones> {
     const hasta = new Date(ahora + 10 * DIA_MS);
     const reuniones = await listarReunionesLocales(desde, hasta);
     return { ok: true, reuniones };
-  } catch {
+  } catch (e) {
+    console.error("[cargarReunionesHoy]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudieron cargar las reuniones." };
   }
 }
@@ -67,7 +68,8 @@ export async function cargarTareasDelDia(): Promise<ResultadoTareas> {
     const recurrentes = delDia.filter((t) => t.tipoFrecuencia !== "PUNTUAL").map(mapper);
     const puntuales = delDia.filter((t) => t.tipoFrecuencia === "PUNTUAL").map(mapper);
     return { ok: true, recurrentes, puntuales };
-  } catch {
+  } catch (e) {
+    console.error("[cargarTareasDelDia]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudieron cargar las tareas del dia." };
   }
 }
@@ -131,7 +133,8 @@ export async function cargarTareasVencenPronto(): Promise<ResultadoVencenPronto>
       vencidas: filas.filter((f) => dias(f) < 0).length,
       proximas: filas.filter((f) => dias(f) <= DIAS_INDICADOR_PRONTO).length,
     };
-  } catch {
+  } catch (e) {
+    console.error("[cargarTareasVencenPronto]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudieron cargar las tareas que vencen pronto." };
   }
 }
@@ -152,7 +155,8 @@ export async function cargarPendientes(): Promise<ResultadoPendientes> {
       tareas,
       total,
     };
-  } catch {
+  } catch (e) {
+    console.error("[cargarPendientes]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudieron cargar los pendientes." };
   }
 }
@@ -171,7 +175,8 @@ export async function cargarProyectosAccesos(): Promise<ResultadoProyectos> {
         .slice(0, MAX_PROYECTOS_ACCESOS)
         .map((p) => ({ id: p.id, nombre: p.nombre })),
     };
-  } catch {
+  } catch (e) {
+    console.error("[cargarProyectosAccesos]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudieron cargar los proyectos." };
   }
 }
@@ -206,7 +211,8 @@ export async function cargarEstadisticas(): Promise<ResultadoEstadisticas> {
         .sort((a, b) => b.cantidad - a.cantidad),
       total: cumplimiento.total,
     };
-  } catch {
+  } catch (e) {
+    console.error("[cargarEstadisticas]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudieron cargar las estadisticas." };
   }
 }
@@ -221,11 +227,13 @@ export async function cargarNotificaciones(): Promise<ResultadoNotificaciones> {
     let urgentes = 0;
     try {
       urgentes = (await contarNotificacionesPriorizadas()).urgentes;
-    } catch {
+    } catch (e) {
+      console.error("[cargarNotificaciones/urgentes]", (e as Error).message, (e as Error).cause);
       urgentes = 0;
     }
     return { ok: true, cantidad, urgentes };
-  } catch {
+  } catch (e) {
+    console.error("[cargarNotificaciones]", (e as Error).message, (e as Error).cause);
     return { ok: false, cantidad: 0, urgentes: 0 };
   }
 }
@@ -256,7 +264,8 @@ export async function cargarUltimaBitacora(): Promise<ResultadoUltimaBitacora> {
         dias,
       },
     };
-  } catch {
+  } catch (e) {
+    console.error("[cargarUltimaBitacora]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudo cargar la última entrada de la bitácora." };
   }
 }
@@ -279,7 +288,8 @@ export async function cargarProyectosSinAvance(): Promise<ResultadoSinAvance> {
         sinNotas: a.sinNotas,
       })),
     };
-  } catch {
+  } catch (e) {
+    console.error("[cargarProyectosSinAvance]", (e as Error).message, (e as Error).cause);
     return { ok: false, error: "No se pudieron revisar los proyectos sin avance." };
   }
 }

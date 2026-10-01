@@ -11,12 +11,12 @@ const USUARIO_ID = "unico";
 // Cada operación viaja a la base de datos y vuelve; un lote grande se pasa del timeout
 const LOTE_OPERACIONES = 40;
 
-// Margen sobre el default de 5 s de Prisma para el lote más lleno
+// Margen sobre el límite de 5 s de Prisma para el lote más lleno
 const TIMEOUT_TRANSACCION_MS = 30_000;
 
 type ClientePrisma = ReturnType<typeof obtenerPrisma>;
 
-// Reparte las operaciones enTransactions acotadas; el cierre va en la última para no marcar antes de terminar
+// Reparte las operaciones en transacciones acotadas; el cierre va en la última para no marcar antes de terminar
 async function aplicarPorLotes(
   prisma: ClientePrisma,
   operaciones: Prisma.PrismaPromise<unknown>[],

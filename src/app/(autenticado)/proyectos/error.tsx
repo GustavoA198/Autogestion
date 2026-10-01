@@ -2,8 +2,10 @@
 
 import { Boton } from "@/componentes/boton";
 import { EstadoError } from "@/componentes/estado-error";
+import { useRegistrarError } from "@/lib/errores/registro";
 
-export default function ErrorProyectos({ reset }: { error: Error; reset: () => void }) {
+export default function ErrorProyectos({ error, reset }: { error: Error; reset: () => void }) {
+  useRegistrarError(error, "proyectos");
   return (
     <EstadoError
       titulo="No se pudieron cargar los proyectos"
