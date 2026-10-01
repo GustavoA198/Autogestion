@@ -2,8 +2,10 @@
 
 import { Boton } from "@/componentes/boton";
 import { EstadoError } from "@/componentes/estado-error";
+import { useRegistrarError } from "@/lib/errores/registro";
 
-export default function ErrorNotificaciones({ reset }: { error: Error; reset: () => void }) {
+export default function ErrorNotificaciones({ error, reset }: { error: Error; reset: () => void }) {
+  useRegistrarError(error, "notificaciones");
   return (
     <EstadoError
       titulo="No se pudieron cargar las notificaciones"

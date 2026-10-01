@@ -2,8 +2,10 @@
 
 import { Boton } from "@/componentes/boton";
 import { EstadoError } from "@/componentes/estado-error";
+import { useRegistrarError } from "@/lib/errores/registro";
 
-export default function ErrorRespaldo({ reset }: { error: Error; reset: () => void }) {
+export default function ErrorRespaldo({ error, reset }: { error: Error; reset: () => void }) {
+  useRegistrarError(error, "respaldo");
   return (
     <EstadoError
       titulo="No se pudo cargar la sección de respaldo"
