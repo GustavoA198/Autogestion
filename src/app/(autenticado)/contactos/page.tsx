@@ -1,5 +1,6 @@
 import { BarraFiltros } from "@/componentes/barra-filtros";
 import { BotonEnlace, Enlace } from "@/componentes/enlace";
+import { Clipboard } from "@/componentes/clipboard";
 import { Entrada } from "@/componentes/entrada";
 import { EstadoVacio } from "@/componentes/estado-vacio";
 import { Icono } from "@/componentes/icono";
@@ -98,23 +99,37 @@ export default async function Contactos({ searchParams }: PageProps<"/contactos"
                 {contactos.map((contacto) => (
                   <tr key={contacto.id}>
                     <th scope="row" className="font-bold">
-                      <Enlace
-                        href={`/contactos/${contacto.id}`}
-                        discreto
-                        title={contacto.nombre}
-                        className="block max-w-56 truncate"
-                      >
-                        {contacto.nombre}
-                      </Enlace>
+                      <div className="flex items-center gap-1">
+                        <Enlace
+                          href={`/contactos/${contacto.id}`}
+                          discreto
+                          title={contacto.nombre}
+                          className="block max-w-56 truncate"
+                        >
+                          {contacto.nombre}
+                        </Enlace>
+                        <Clipboard
+                          compacto
+                          texto={contacto.nombre}
+                          etiqueta={`Copiar nombre de ${contacto.nombre}`}
+                        />
+                      </div>
                     </th>
                     <td data-etiqueta="Correo" className="font-mono text-sm">
-                      <a
-                        href={`mailto:${contacto.correo}`}
-                        title={contacto.correo}
-                        className="enlace block max-w-64 min-w-0 truncate"
-                      >
-                        {contacto.correo}
-                      </a>
+                      <div className="flex items-center gap-1">
+                        <a
+                          href={`mailto:${contacto.correo}`}
+                          title={contacto.correo}
+                          className="enlace block max-w-64 min-w-0 truncate"
+                        >
+                          {contacto.correo}
+                        </a>
+                        <Clipboard
+                          compacto
+                          texto={contacto.correo}
+                          etiqueta={`Copiar correo de ${contacto.nombre}`}
+                        />
+                      </div>
                     </td>
                     <td data-etiqueta="Empresa / Cargo">
                       <span

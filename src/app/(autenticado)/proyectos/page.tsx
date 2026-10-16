@@ -4,7 +4,7 @@ import { Icono } from "@/componentes/icono";
 import { Tabla } from "@/componentes/tabla";
 import { TituloSeccion } from "@/componentes/shell/titulo-seccion";
 import { listarProyectos } from "@/lib/proyectos/operaciones";
-import { EnlaceDocumentacion } from "./enlace-documentacion";
+import { ResumenDocumentacion } from "./resumen-documentacion";
 
 export const dynamic = "force-dynamic";
 
@@ -63,11 +63,7 @@ export default async function Proyectos() {
                   </span>
                 </td>
                 <td data-etiqueta="Documentación">
-                  {proyecto.enlaceDocumentacion ? (
-                    <EnlaceDocumentacion url={proyecto.enlaceDocumentacion} />
-                  ) : (
-                    <span className="text-tenue">Sin enlace</span>
-                  )}
+                  <ResumenDocumentacion proyectoId={proyecto.id} enlaces={proyecto.enlaces} />
                 </td>
               </tr>
             ))}

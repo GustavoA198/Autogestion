@@ -111,7 +111,7 @@ function Campos({ valores, errores, proyectos, editando }: PropiedadesCampos) {
           />
         </FilaCampos>
         <Entrada
-          etiqueta="Host o URL (opcional)"
+          etiqueta="URL o host (opcional)"
           name="host"
           autoComplete="off"
           maxLength={LIMITES_CREDENCIAL.host}

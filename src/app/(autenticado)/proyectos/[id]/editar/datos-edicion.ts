@@ -14,7 +14,7 @@ export async function cargarEdicionProyecto(id: string) {
       valoresIniciales: {
         nombre: proyecto.nombre,
         descripcion: proyecto.descripcion ?? "",
-        enlaceDocumentacion: proyecto.enlaceDocumentacion ?? "",
+        enlaces: proyecto.enlaces.map(({ nombre, url }) => ({ nombre, url })),
       },
       textoEnviar: "Guardar cambios",
       rutaCancelar: `/proyectos/${proyecto.id}`,

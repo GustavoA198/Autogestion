@@ -20,8 +20,6 @@ export async function cargarEdicionTarea(id: string) {
     prioridad: tarea.prioridad,
     fechaInicio: tarea.fechaInicio ? tarea.fechaInicio.toISOString().split("T")[0] : "",
     fechaLimite: tarea.fechaLimite ? tarea.fechaLimite.toISOString().split("T")[0] : "",
-    responsable: tarea.responsable ?? "",
-    asignadoPor: tarea.asignadoPor ?? "",
   };
 
   return {

@@ -143,8 +143,6 @@ function camposDeTarea(datos: DatosTarea) {
     prioridad: datos.prioridad,
     fechaInicio: datos.fechaInicio,
     fechaLimite: datos.fechaLimite,
-    responsable: datos.responsable,
-    asignadoPor: datos.asignadoPor,
     activa: datos.activa,
   };
 }
@@ -546,8 +544,6 @@ export async function clonarTareas(
             diaSemana: tarea.diaSemana,
             diaMes: tarea.diaMes,
             prioridad: tarea.prioridad,
-            responsable: tarea.responsable,
-            asignadoPor: tarea.asignadoPor,
             estado: "NUEVA",
             proyectoId: destinoId,
             activa: true,

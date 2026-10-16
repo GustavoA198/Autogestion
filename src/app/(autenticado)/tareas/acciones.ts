@@ -50,8 +50,6 @@ export type ValoresTarea = {
   prioridad: string;
   fechaInicio: string;
   fechaLimite: string;
-  responsable: string;
-  asignadoPor: string;
   // Solo en la creación: enlaces y subtareas iniciales
   enlaces?: EnlaceEscrito[];
   subtareas?: { texto: string; descripcion: string }[];
@@ -93,8 +91,6 @@ function leerCampos(formulario: FormData) {
     prioridad: formulario.get("prioridad") ?? undefined,
     fechaInicio: formulario.get("fechaInicio") ?? undefined,
     fechaLimite: formulario.get("fechaLimite") ?? undefined,
-    responsable: formulario.get("responsable") ?? undefined,
-    asignadoPor: formulario.get("asignadoPor") ?? undefined,
   };
 }
 
@@ -139,8 +135,6 @@ function valoresEscritos(
     prioridad: texto(campos.prioridad),
     fechaInicio: texto(campos.fechaInicio),
     fechaLimite: texto(campos.fechaLimite),
-    responsable: texto(campos.responsable),
-    asignadoPor: texto(campos.asignadoPor),
     ...(listas ? { enlaces: listas.enlaces, subtareas: listas.subtareas } : {}),
   };
 }

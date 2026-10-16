@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 import { AreaConScroll } from "@/componentes/area-con-scroll";
 import { AreaTexto } from "@/componentes/area-texto";
+import { EditorEnlaces, type FilaEnlace } from "@/componentes/editor-enlaces";
 import { Enlace } from "@/componentes/enlace";
 import { Entrada } from "@/componentes/entrada";
 import {
@@ -17,13 +18,7 @@ import { Selector } from "@/componentes/selector";
 import { ESTADO_LABEL, PRIORIDAD_LABEL } from "@/lib/tareas/presentacion";
 import { LIMITES_TAREA, type ErroresTarea } from "@/lib/tareas/validacion";
 import type { EstadoFormularioTarea, ValoresTarea } from "./acciones";
-import { CampoPersona } from "./campo-persona";
-import {
-  EditorEnlaces,
-  EditorSubtareas,
-  type FilaEnlace,
-  type FilaSubtarea,
-} from "./listas-creacion";
+import { EditorSubtareas, type FilaSubtarea } from "./listas-creacion";
 
 type Propiedades = {
   accion: (anterior: EstadoFormularioTarea, formulario: FormData) => Promise<EstadoFormularioTarea>;
@@ -57,8 +52,6 @@ const VACIOS: ValoresTarea = {
   prioridad: "MEDIA",
   fechaInicio: "",
   fechaLimite: "",
-  responsable: "",
-  asignadoPor: "",
 };
 
 const DIAS_SEMANA = [
@@ -155,8 +148,6 @@ export function FormularioTarea({
   const errores = estado.errores ?? {};
   const erroresListas = estado.erroresListas;
   const [frecuencia, setFrecuencia] = useState(valores.tipoFrecuencia);
-  const [responsable, setResponsable] = useState(valores.responsable);
-  const [asignadoPor, setAsignadoPor] = useState(valores.asignadoPor);
   const [enlaces, setEnlaces] = useState<FilaEnlace[]>(() =>
     (valores.enlaces ?? []).map((e, i) => ({ clave: i + 1, ...e })),
   );
@@ -315,32 +306,6 @@ export function FormularioTarea({
       </SeccionFormulario>
 
       <SeccionFormulario
-        titulo="Personas"
-        descripcion="Quién la hace y quién la pidió. Texto libre; «Yo» es un atajo."
-      >
-        <FilaCampos>
-          <CampoPersona
-            etiqueta="Responsable"
-            name="responsable"
-            value={responsable}
-            onChange={setResponsable}
-            maxLength={LIMITES_TAREA.responsable}
-            invalido={Boolean(errores.responsable)}
-            mensaje={errores.responsable}
-          />
-          <CampoPersona
-            etiqueta="Asignada por"
-            name="asignadoPor"
-            value={asignadoPor}
-            onChange={setAsignadoPor}
-            maxLength={LIMITES_TAREA.asignadoPor}
-            invalido={Boolean(errores.asignadoPor)}
-            mensaje={errores.asignadoPor}
-          />
-        </FilaCampos>
-      </SeccionFormulario>
-
-      <SeccionFormulario
         titulo="Proyecto"
         descripcion="Opcional: asocia la tarea a un frente de trabajo."
       >
@@ -383,6 +348,8 @@ export function FormularioTarea({
               filas={enlaces}
               alCambiar={setEnlaces}
               errores={erroresListas?.enlaces}
+              maxEtiqueta={LIMITES_TAREA.enlaceEtiqueta}
+              maxUrl={LIMITES_TAREA.enlaceUrl}
             />
           </SeccionFormulario>
           <SeccionFormulario

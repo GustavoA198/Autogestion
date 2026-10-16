@@ -37,6 +37,15 @@ export default async function FichaContacto({ params }: PageProps<"/contactos/[i
           <ListaDatos
             filas={[
               {
+                etiqueta: "Nombre",
+                valor: (
+                  <span className="flex flex-wrap items-center gap-x-2">
+                    <span className="break-all">{contacto.nombre}</span>
+                    <Clipboard compacto texto={contacto.nombre} etiqueta="Copiar nombre" />
+                  </span>
+                ),
+              },
+              {
                 etiqueta: "Correo",
                 valor: (
                   <span className="flex flex-wrap items-center gap-x-2">
