@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { AreaTexto } from "@/componentes/area-texto";
+import { EditorEnlaces, type FilaEnlace } from "@/componentes/editor-enlaces";
 import { Entrada } from "@/componentes/entrada";
 import {
   MarcoFormulario,
@@ -10,18 +11,18 @@ import {
   useFocoPrimerError,
 } from "@/componentes/formulario";
 import { LIMITES_PROYECTO } from "@/lib/proyectos/validacion";
-import type { EstadoFormulario } from "./acciones";
+import type { EnlaceEscrito, EstadoFormulario } from "./acciones";
 
 type Propiedades = {
   accion: (anterior: EstadoFormulario, formulario: FormData) => Promise<EstadoFormulario>;
-  valoresIniciales?: { nombre: string; descripcion: string; enlaceDocumentacion: string };
+  valoresIniciales?: { nombre: string; descripcion: string; enlaces: EnlaceEscrito[] };
   textoEnviar: string;
   rutaCancelar: string;
   // Montado dentro de ModalRuta: sin marco de página, con cuerpo desplazable, pie fijo y cierre al guardar
   enModal?: boolean;
 };
 
-const VACIOS = { nombre: "", descripcion: "", enlaceDocumentacion: "" };
+const VACIOS = { nombre: "", descripcion: "", enlaces: [] };
 
 export function FormularioProyecto({
   accion,
@@ -34,7 +35,15 @@ export function FormularioProyecto({
   const formulario = useRef<HTMLFormElement>(null);
   const valores = estado.valores ?? valoresIniciales;
   const errores = estado.errores ?? {};
-  useFocoPrimerError(formulario, estado.errores);
+  const erroresEnlaces = estado.erroresEnlaces;
+  const [enlaces, setEnlaces] = useState<FilaEnlace[]>(() =>
+    valores.enlaces.map((e, i) => ({ clave: i + 1, etiqueta: e.nombre, url: e.url })),
+  );
+  // El editor compartido nombra el primer campo etiqueta; aquí es el nombre del enlace
+  const erroresFilas = Object.fromEntries(
+    Object.entries(erroresEnlaces ?? {}).map(([i, e]) => [i, { etiqueta: e.nombre, url: e.url }]),
+  );
+  useFocoPrimerError(formulario, Object.keys(errores).length > 0 ? errores : erroresEnlaces);
 
   return (
     <MarcoFormulario
@@ -46,7 +55,7 @@ export function FormularioProyecto({
       textoEnviar={textoEnviar}
       rutaCancelar={rutaCancelar}
     >
-      <ResumenErrores cantidad={Object.keys(errores).length} />
+      <ResumenErrores cantidad={Object.keys(errores).length + Object.keys(erroresFilas).length} />
       <SeccionFormulario
         titulo="Datos del proyecto"
         descripcion="Solo el nombre es obligatorio; la documentación real vive en tu repositorio o SharePoint."
@@ -75,18 +84,27 @@ export function FormularioProyecto({
             errores.descripcion ?? "Una o dos frases que te ubiquen en el frente de trabajo."
           }
         />
-        <Entrada
-          key={`enlace-${valores.enlaceDocumentacion}`}
-          etiqueta="Enlace a la documentación (opcional)"
-          name="enlaceDocumentacion"
-          type="url"
-          inputMode="url"
-          placeholder="https://"
-          maxLength={LIMITES_PROYECTO.enlace}
-          defaultValue={valores.enlaceDocumentacion}
-          invalido={Boolean(errores.enlaceDocumentacion)}
-          mensaje={errores.enlaceDocumentacion ?? "Debe empezar por http:// o https://."}
+      </SeccionFormulario>
+      <SeccionFormulario
+        titulo="Documentación"
+        descripcion="Opcional: enlaces a la documentación real (SharePoint, repositorio, wiki). Se guarda el enlace, nunca el documento."
+      >
+        <EditorEnlaces
+          filas={enlaces}
+          alCambiar={setEnlaces}
+          errores={erroresFilas}
+          textoEtiqueta="Nombre"
+          textoDireccion="Enlace"
+          nombreEtiqueta="enlaceNombre"
+          maxEtiqueta={LIMITES_PROYECTO.enlaceNombre}
+          maxUrl={LIMITES_PROYECTO.enlaceUrl}
+          textoVacio="Sin enlaces. Agrega SharePoint, el repositorio o cualquier referencia útil."
         />
+        {errores.enlaces ? (
+          <p role="alert" className="text-error text-sm">
+            {errores.enlaces}
+          </p>
+        ) : null}
       </SeccionFormulario>
     </MarcoFormulario>
   );

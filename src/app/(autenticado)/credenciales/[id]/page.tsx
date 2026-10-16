@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Clipboard } from "@/componentes/clipboard";
 import { BotonEnlace, Enlace } from "@/componentes/enlace";
 import { Icono } from "@/componentes/icono";
 import { Insignia } from "@/componentes/insignia";
@@ -9,6 +10,7 @@ import { Tabla } from "@/componentes/tabla";
 import { CATEGORIAS } from "@/lib/credenciales/categorias";
 import { obtenerCredencial } from "@/lib/credenciales/operaciones";
 import { tiempoRelativo } from "@/lib/tiempo";
+import { DireccionCredencial } from "../direccion-credencial";
 import { SecretoCredencial } from "../secreto-credencial";
 import { BotonEliminarCredencial } from "./boton-eliminar";
 
@@ -57,7 +59,14 @@ export default async function FichaCredencial({ params }: PageProps<"/credencial
               {
                 etiqueta: "Usuario",
                 valor: credencial.usuario ? (
-                  <span className="font-mono">{credencial.usuario}</span>
+                  <span className="flex items-center gap-1">
+                    <span className="font-mono">{credencial.usuario}</span>
+                    <Clipboard
+                      compacto
+                      texto={credencial.usuario}
+                      etiqueta={`Copiar usuario de ${credencial.nombre}`}
+                    />
+                  </span>
                 ) : null,
               },
               {
@@ -65,9 +74,9 @@ export default async function FichaCredencial({ params }: PageProps<"/credencial
                 valor: <SecretoCredencial id={credencial.id} nombre={credencial.nombre} />,
               },
               {
-                etiqueta: "Host o URL",
+                etiqueta: "URL o host",
                 valor: credencial.host ? (
-                  <span className="font-mono break-all">{credencial.host}</span>
+                  <DireccionCredencial direccion={credencial.host} nombre={credencial.nombre} />
                 ) : null,
               },
               {

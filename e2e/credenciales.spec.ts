@@ -39,7 +39,7 @@ test("crear con secreto, revelarlo, editar sin cambiarlo, vincular a un proyecto
 
   // Editar sin escribir secreto conserva el actual y deja un solo cambio en el historial
   await page.goto(`${urlCredencial}/editar`);
-  await page.getByLabel("Host o URL (opcional)").fill("db.example.com");
+  await page.getByLabel("URL o host (opcional)").fill("db.example.com");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByRole("cell", { name: "host o URL" })).toBeVisible();
   await expect(page.getByRole("cell", { name: "secreto" })).toHaveCount(0);

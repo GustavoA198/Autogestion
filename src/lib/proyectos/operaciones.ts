@@ -1,5 +1,5 @@
 import { obtenerPrisma } from "@/lib/prisma";
-import type { DatosProyecto } from "@/lib/proyectos/validacion";
+import type { DatosProyecto, EnlaceProyecto } from "@/lib/proyectos/validacion";
 
 export type ResultadoEscritura =
   { ok: true; id: string } | { ok: false; error: "nombre-duplicado" };
@@ -12,17 +12,33 @@ function tieneCodigo(error: unknown, codigo: string): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === codigo;
 }
 
+// El orden de cada enlace es su posición en la lista enviada
+function filasDeEnlaces(enlaces: EnlaceProyecto[]) {
+  return enlaces.map((enlace, orden) => ({ ...enlace, orden }));
+}
+
 export function listarProyectos() {
-  return obtenerPrisma().proyecto.findMany({ orderBy: { nombre: "asc" } });
+  return obtenerPrisma().proyecto.findMany({
+    orderBy: { nombre: "asc" },
+    include: { enlaces: { orderBy: { orden: "asc" } } },
+  });
 }
 
 export function obtenerProyecto(id: string) {
-  return obtenerPrisma().proyecto.findUnique({ where: { id } });
+  return obtenerPrisma().proyecto.findUnique({
+    where: { id },
+    include: { enlaces: { orderBy: { orden: "asc" } } },
+  });
 }
 
-export async function crearProyecto(datos: DatosProyecto): Promise<ResultadoEscritura> {
+export async function crearProyecto(
+  datos: DatosProyecto,
+  enlaces: EnlaceProyecto[] = [],
+): Promise<ResultadoEscritura> {
   try {
-    const proyecto = await obtenerPrisma().proyecto.create({ data: datos });
+    const proyecto = await obtenerPrisma().proyecto.create({
+      data: { ...datos, enlaces: { create: filasDeEnlaces(enlaces) } },
+    });
     return { ok: true, id: proyecto.id };
   } catch (error) {
     if (tieneCodigo(error, CODIGO_UNICIDAD)) return { ok: false, error: "nombre-duplicado" };
@@ -34,9 +50,14 @@ export async function crearProyecto(datos: DatosProyecto): Promise<ResultadoEscr
 export async function actualizarProyecto(
   id: string,
   datos: DatosProyecto,
+  enlaces: EnlaceProyecto[] = [],
 ): Promise<ResultadoEscritura | null> {
   try {
-    await obtenerPrisma().proyecto.update({ where: { id }, data: datos });
+    // Reemplaza la lista completa de enlaces en una sola operación atómica
+    await obtenerPrisma().proyecto.update({
+      where: { id },
+      data: { ...datos, enlaces: { deleteMany: {}, create: filasDeEnlaces(enlaces) } },
+    });
     return { ok: true, id };
   } catch (error) {
     if (tieneCodigo(error, CODIGO_UNICIDAD)) return { ok: false, error: "nombre-duplicado" };

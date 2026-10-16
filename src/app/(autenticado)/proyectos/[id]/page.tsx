@@ -8,7 +8,7 @@ import { resumirEliminacionProyecto as resumirCredenciales } from "@/lib/credenc
 import { resumirEliminacionProyecto as resumirContactos } from "@/lib/contactos/operaciones";
 import { obtenerUltimaNota } from "@/lib/notas/operaciones";
 import { obtenerProyecto } from "@/lib/proyectos/operaciones";
-import { EnlaceDocumentacion } from "../enlace-documentacion";
+import { ListaDocumentacion } from "../resumen-documentacion";
 import { BotonEliminarProyecto } from "./boton-eliminar";
 import { SeccionCredenciales } from "./seccion-credenciales";
 import { SeccionContactos } from "./seccion-contactos";
@@ -51,11 +51,11 @@ export default async function FichaProyecto({ params }: PageProps<"/proyectos/[i
       />
       <div className="space-y-5">
         <Tarjeta titulo="Documentación">
-          {proyecto.enlaceDocumentacion ? (
-            <EnlaceDocumentacion url={proyecto.enlaceDocumentacion} />
+          {proyecto.enlaces.length > 0 ? (
+            <ListaDocumentacion enlaces={proyecto.enlaces} />
           ) : (
             <p className="text-suave text-sm">
-              Este proyecto no tiene enlace de documentación. Puedes agregarlo desde Editar.
+              Este proyecto no tiene enlaces de documentación. Puedes agregarlos desde Editar.
             </p>
           )}
         </Tarjeta>

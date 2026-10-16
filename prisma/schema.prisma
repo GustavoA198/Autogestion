@@ -33,15 +33,28 @@ model Proyecto {
   id                  String               @id @default(cuid())
   nombre              String               @unique
   descripcion         String?
-  enlaceDocumentacion String?              @map("enlace_documentacion")
   creadoEn            DateTime             @default(now()) @map("creado_en")
   actualizadoEn       DateTime             @updatedAt @map("actualizado_en")
   credenciales        CredencialProyecto[]
   contactos           ContactoProyecto[]
   notas               Nota[]
   tareas              Tarea[]
+  enlaces             ProyectoEnlace[]
 
   @@map("proyecto")
+}
+
+// Enlace de documentación de un proyecto (nombre y dirección)
+model ProyectoEnlace {
+  id         String   @id @default(cuid())
+  proyectoId String   @map("proyecto_id")
+  nombre     String
+  url        String
+  orden      Int      @default(0)
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@index([proyectoId, orden])
+  @@map("proyecto_enlace")
 }
 
 enum CategoriaCredencial {
@@ -190,8 +203,6 @@ model Tarea {
   prioridad      PrioridadTarea @default(MEDIA)
   fechaInicio    DateTime?      @map("fecha_inicio") @db.Date
   fechaLimite    DateTime?      @map("fecha_limite") @db.Date
-  responsable    String?
-  asignadoPor    String?        @map("asignado_por")
   porcentaje     Int            @default(0)   // en desuso: el avance se deriva de las subtareas y no se lee
   proyectoId     String?        @map("proyecto_id")
   activa         Boolean        @default(true)

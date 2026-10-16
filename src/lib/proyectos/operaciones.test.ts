@@ -20,9 +20,15 @@ import {
   crearProyecto,
   eliminarProyecto,
   listarProyectos,
+  obtenerProyecto,
 } from "@/lib/proyectos/operaciones";
 
-const datos = { nombre: "Cliente Norte", descripcion: null, enlaceDocumentacion: null };
+const datos = { nombre: "Cliente Norte", descripcion: null };
+const enlaces = [
+  { nombre: "SharePoint", url: "https://empresa.sharepoint.com" },
+  { nombre: "Repo", url: "https://github.com/empresa/repo" },
+];
+const incluirEnlaces = { enlaces: { orderBy: { orden: "asc" } } };
 const errorPrisma = (code: string) => Object.assign(new Error("prisma"), { code });
 
 beforeEach(() => {
@@ -33,10 +39,24 @@ beforeEach(() => {
 });
 
 describe("listarProyectos", () => {
-  it("ordena por nombre", async () => {
+  it("ordena por nombre e incluye los enlaces en su orden", async () => {
     prisma.proyecto.findMany.mockResolvedValue([]);
     await listarProyectos();
-    expect(prisma.proyecto.findMany).toHaveBeenCalledWith({ orderBy: { nombre: "asc" } });
+    expect(prisma.proyecto.findMany).toHaveBeenCalledWith({
+      orderBy: { nombre: "asc" },
+      include: incluirEnlaces,
+    });
+  });
+});
+
+describe("obtenerProyecto", () => {
+  it("incluye los enlaces en su orden", async () => {
+    prisma.proyecto.findUnique.mockResolvedValue(null);
+    await obtenerProyecto("p1");
+    expect(prisma.proyecto.findUnique).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      include: incluirEnlaces,
+    });
   });
 });
 
@@ -44,7 +64,25 @@ describe("crearProyecto", () => {
   it("devuelve el id del proyecto creado", async () => {
     prisma.proyecto.create.mockResolvedValue({ id: "p1" });
     expect(await crearProyecto(datos)).toEqual({ ok: true, id: "p1" });
-    expect(prisma.proyecto.create).toHaveBeenCalledWith({ data: datos });
+    expect(prisma.proyecto.create).toHaveBeenCalledWith({
+      data: { ...datos, enlaces: { create: [] } },
+    });
+  });
+
+  it("crea los enlaces con su posición como orden", async () => {
+    prisma.proyecto.create.mockResolvedValue({ id: "p1" });
+    await crearProyecto(datos, enlaces);
+    expect(prisma.proyecto.create).toHaveBeenCalledWith({
+      data: {
+        ...datos,
+        enlaces: {
+          create: [
+            { ...enlaces[0], orden: 0 },
+            { ...enlaces[1], orden: 1 },
+          ],
+        },
+      },
+    });
   });
 
   it("informa nombre duplicado cuando Prisma viola la unicidad", async () => {
@@ -62,7 +100,28 @@ describe("actualizarProyecto", () => {
   it("actualiza por id", async () => {
     prisma.proyecto.update.mockResolvedValue({ id: "p1" });
     expect(await actualizarProyecto("p1", datos)).toEqual({ ok: true, id: "p1" });
-    expect(prisma.proyecto.update).toHaveBeenCalledWith({ where: { id: "p1" }, data: datos });
+    expect(prisma.proyecto.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { ...datos, enlaces: { deleteMany: {}, create: [] } },
+    });
+  });
+
+  it("reemplaza la lista completa de enlaces en una sola operación", async () => {
+    prisma.proyecto.update.mockResolvedValue({ id: "p1" });
+    await actualizarProyecto("p1", datos, enlaces);
+    expect(prisma.proyecto.update).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: {
+        ...datos,
+        enlaces: {
+          deleteMany: {},
+          create: [
+            { ...enlaces[0], orden: 0 },
+            { ...enlaces[1], orden: 1 },
+          ],
+        },
+      },
+    });
   });
 
   it("informa nombre duplicado", async () => {
