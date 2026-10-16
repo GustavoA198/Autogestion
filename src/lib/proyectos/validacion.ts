@@ -1,14 +1,26 @@
 import { z } from "zod";
 
-export const LIMITES_PROYECTO = { nombre: 80, descripcion: 300, enlace: 500 } as const;
+export const LIMITES_PROYECTO = {
+  nombre: 80,
+  descripcion: 300,
+  enlaceNombre: 80,
+  enlaceUrl: 2000,
+  enlaces: 20,
+} as const;
 
-export type CamposProyecto = "nombre" | "descripcion" | "enlaceDocumentacion";
-export type ErroresProyecto = Partial<Record<CamposProyecto, string>>;
+export type CamposProyecto = "nombre" | "descripcion";
+// La clave enlaces lleva el error general de la lista (por ejemplo, demasiadas filas)
+export type ErroresProyecto = Partial<Record<CamposProyecto | "enlaces", string>>;
 export type DatosProyecto = {
   nombre: string;
   descripcion: string | null;
-  enlaceDocumentacion: string | null;
 };
+
+export type EnlaceProyecto = { nombre: string; url: string };
+export type ErroresEnlacesProyecto = Record<number, { nombre?: string; url?: string }>;
+export type ResultadoEnlaces =
+  | { ok: true; enlaces: EnlaceProyecto[] }
+  | { ok: false; errores: ErroresEnlacesProyecto; general?: string };
 
 // Solo http/https: cualquier otro esquema (javascript:, data:, file:) se rechaza
 function esUrlWeb(valor: string): boolean {
@@ -38,12 +50,6 @@ const esquemaProyecto = z.object({
     LIMITES_PROYECTO.descripcion,
     `La descripción admite hasta ${LIMITES_PROYECTO.descripcion} caracteres.`,
   ),
-  enlaceDocumentacion: opcional(
-    LIMITES_PROYECTO.enlace,
-    `El enlace admite hasta ${LIMITES_PROYECTO.enlace} caracteres.`,
-  ).refine((valor) => valor === null || esUrlWeb(valor), {
-    message: "El enlace debe ser una URL válida que empiece con http:// o https://.",
-  }),
 });
 
 export type ResultadoValidacion =
@@ -58,7 +64,6 @@ export function validarProyecto(entrada: Record<CamposProyecto, unknown>): Resul
   const resultado = esquemaProyecto.safeParse({
     nombre: comoTexto(entrada.nombre),
     descripcion: comoTexto(entrada.descripcion),
-    enlaceDocumentacion: comoTexto(entrada.enlaceDocumentacion),
   });
   if (resultado.success) return { ok: true, datos: resultado.data };
 
@@ -68,4 +73,41 @@ export function validarProyecto(entrada: Record<CamposProyecto, unknown>): Resul
     errores[campo] ??= problema.message;
   }
   return { ok: false, errores };
+}
+
+// Valida las filas de enlaces; las filas vacías del todo se descartan y el índice del error es el de la fila enviada
+export function validarEnlacesProyecto(filas: { nombre: unknown; url: unknown }[]): ResultadoEnlaces {
+  const enlaces: EnlaceProyecto[] = [];
+  const errores: ErroresEnlacesProyecto = {};
+
+  filas.forEach((fila, indice) => {
+    const nombre = comoTexto(fila.nombre).trim();
+    const url = comoTexto(fila.url).trim();
+    if (nombre === "" && url === "") return;
+
+    const error: { nombre?: string; url?: string } = {};
+    if (nombre === "") error.nombre = "El nombre del enlace es obligatorio.";
+    else if (nombre.length > LIMITES_PROYECTO.enlaceNombre) {
+      error.nombre = `El nombre admite hasta ${LIMITES_PROYECTO.enlaceNombre} caracteres.`;
+    }
+    if (url === "") error.url = "La dirección es obligatoria.";
+    else if (url.length > LIMITES_PROYECTO.enlaceUrl) {
+      error.url = `La dirección admite hasta ${LIMITES_PROYECTO.enlaceUrl} caracteres.`;
+    } else if (!esUrlWeb(url)) {
+      error.url = "La dirección debe ser una URL válida que empiece con http:// o https://.";
+    }
+
+    if (error.nombre || error.url) errores[indice] = error;
+    else enlaces.push({ nombre, url });
+  });
+
+  if (enlaces.length > LIMITES_PROYECTO.enlaces) {
+    return {
+      ok: false,
+      errores,
+      general: `Puedes guardar hasta ${LIMITES_PROYECTO.enlaces} enlaces por proyecto.`,
+    };
+  }
+  if (Object.keys(errores).length > 0) return { ok: false, errores };
+  return { ok: true, enlaces };
 }

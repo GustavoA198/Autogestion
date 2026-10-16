@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { LIMITES_PROYECTO, validarProyecto } from "@/lib/proyectos/validacion";
+import {
+  LIMITES_PROYECTO,
+  validarEnlacesProyecto,
+  validarProyecto,
+} from "@/lib/proyectos/validacion";
 
-const base = { nombre: "Cliente Norte", descripcion: "", enlaceDocumentacion: "" };
+const base = { nombre: "Cliente Norte", descripcion: "" };
 
 describe("validarProyecto", () => {
   it("recorta el nombre y convierte los opcionales vacíos en null", () => {
     const resultado = validarProyecto({ ...base, nombre: "  Cliente Norte  " });
     expect(resultado).toEqual({
       ok: true,
-      datos: { nombre: "Cliente Norte", descripcion: null, enlaceDocumentacion: null },
+      datos: { nombre: "Cliente Norte", descripcion: null },
     });
   });
 
@@ -36,12 +40,45 @@ describe("validarProyecto", () => {
     expect(resultado.ok).toBe(true);
   });
 
-  it.each(["https://empresa.sharepoint.com/sitio", "http://localhost:3000/docs"])(
-    "acepta el enlace %s",
-    (enlaceDocumentacion) => {
-      expect(validarProyecto({ ...base, enlaceDocumentacion }).ok).toBe(true);
-    },
-  );
+  it("trata valores que no son texto como vacíos", () => {
+    const resultado = validarProyecto({ nombre: "X", descripcion: 5 });
+    expect(resultado).toEqual({ ok: true, datos: { nombre: "X", descripcion: null } });
+  });
+});
+
+describe("validarEnlacesProyecto", () => {
+  it("acepta una lista vacía", () => {
+    expect(validarEnlacesProyecto([])).toEqual({ ok: true, enlaces: [] });
+  });
+
+  it("recorta los textos y descarta las filas vacías del todo", () => {
+    const resultado = validarEnlacesProyecto([
+      { nombre: "  SharePoint ", url: " https://empresa.sharepoint.com/sitio " },
+      { nombre: "", url: "   " },
+      { nombre: "Repo", url: "http://localhost:3000/docs" },
+    ]);
+    expect(resultado).toEqual({
+      ok: true,
+      enlaces: [
+        { nombre: "SharePoint", url: "https://empresa.sharepoint.com/sitio" },
+        { nombre: "Repo", url: "http://localhost:3000/docs" },
+      ],
+    });
+  });
+
+  it("exige nombre y dirección cuando la fila tiene algo", () => {
+    const resultado = validarEnlacesProyecto([
+      { nombre: "Solo nombre", url: "" },
+      { nombre: "", url: "https://example.com" },
+    ]);
+    expect(resultado).toEqual({
+      ok: false,
+      errores: {
+        0: { url: expect.any(String) },
+        1: { nombre: expect.any(String) },
+      },
+    });
+  });
 
   it.each([
     "javascript:alert(1)",
@@ -51,19 +88,45 @@ describe("validarProyecto", () => {
     "ftp://servidor/archivo",
     "sin-esquema.com",
     "https//roto",
-  ])("rechaza el enlace %s", (enlaceDocumentacion) => {
-    const resultado = validarProyecto({ ...base, enlaceDocumentacion });
+  ])("rechaza la dirección %s", (url) => {
+    const resultado = validarEnlacesProyecto([{ nombre: "Docs", url }]);
+    expect(resultado).toMatchObject({ ok: false, errores: { 0: { url: expect.any(String) } } });
+  });
+
+  it("indexa el error por la posición de la fila enviada, contando las vacías", () => {
+    const resultado = validarEnlacesProyecto([
+      { nombre: "", url: "" },
+      { nombre: "Docs", url: "javascript:alert(1)" },
+    ]);
+    expect(resultado).toMatchObject({ ok: false, errores: { 1: { url: expect.any(String) } } });
+  });
+
+  it("rechaza nombre y dirección por encima del máximo", () => {
+    const resultado = validarEnlacesProyecto([
+      {
+        nombre: "a".repeat(LIMITES_PROYECTO.enlaceNombre + 1),
+        url: `https://example.com/${"b".repeat(LIMITES_PROYECTO.enlaceUrl)}`,
+      },
+    ]);
     expect(resultado).toMatchObject({
       ok: false,
-      errores: { enlaceDocumentacion: expect.any(String) },
+      errores: { 0: { nombre: expect.any(String), url: expect.any(String) } },
     });
   });
 
   it("trata valores que no son texto como vacíos", () => {
-    const resultado = validarProyecto({ nombre: "X", descripcion: 5, enlaceDocumentacion: {} });
-    expect(resultado).toEqual({
-      ok: true,
-      datos: { nombre: "X", descripcion: null, enlaceDocumentacion: null },
+    expect(validarEnlacesProyecto([{ nombre: 5, url: {} }])).toEqual({ ok: true, enlaces: [] });
+  });
+
+  it("rechaza más filas que el tope", () => {
+    const filas = Array.from({ length: LIMITES_PROYECTO.enlaces + 1 }, (_, i) => ({
+      nombre: `Enlace ${i}`,
+      url: "https://example.com",
+    }));
+    expect(validarEnlacesProyecto(filas)).toMatchObject({
+      ok: false,
+      general: expect.any(String),
     });
+    expect(validarEnlacesProyecto(filas.slice(0, LIMITES_PROYECTO.enlaces)).ok).toBe(true);
   });
 });

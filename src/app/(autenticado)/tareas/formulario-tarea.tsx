@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 import { AreaConScroll } from "@/componentes/area-con-scroll";
 import { AreaTexto } from "@/componentes/area-texto";
+import { EditorEnlaces, type FilaEnlace } from "@/componentes/editor-enlaces";
 import { Enlace } from "@/componentes/enlace";
 import { Entrada } from "@/componentes/entrada";
 import {
@@ -18,12 +19,7 @@ import { ESTADO_LABEL, PRIORIDAD_LABEL } from "@/lib/tareas/presentacion";
 import { LIMITES_TAREA, type ErroresTarea } from "@/lib/tareas/validacion";
 import type { EstadoFormularioTarea, ValoresTarea } from "./acciones";
 import { CampoPersona } from "./campo-persona";
-import {
-  EditorEnlaces,
-  EditorSubtareas,
-  type FilaEnlace,
-  type FilaSubtarea,
-} from "./listas-creacion";
+import { EditorSubtareas, type FilaSubtarea } from "./listas-creacion";
 
 type Propiedades = {
   accion: (anterior: EstadoFormularioTarea, formulario: FormData) => Promise<EstadoFormularioTarea>;
@@ -383,6 +379,8 @@ export function FormularioTarea({
               filas={enlaces}
               alCambiar={setEnlaces}
               errores={erroresListas?.enlaces}
+              maxEtiqueta={LIMITES_TAREA.enlaceEtiqueta}
+              maxUrl={LIMITES_TAREA.enlaceUrl}
             />
           </SeccionFormulario>
           <SeccionFormulario
