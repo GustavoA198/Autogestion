@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useAvisos } from "@/componentes/aviso";
+import { AreaTexto } from "@/componentes/area-texto";
 import { Boton } from "@/componentes/boton";
 import { Confirmacion } from "@/componentes/confirmacion";
 import { Entrada } from "@/componentes/entrada";
@@ -197,7 +198,13 @@ function FilaSubtarea({
 
       <div className="min-w-0 basis-[calc(100%-3rem)] sm:flex-1 sm:basis-0">
         {editando ? (
-          <div className="space-y-1.5 py-1.5">
+          <div
+            className="space-y-1.5 py-1.5"
+            onBlur={(e) => {
+              // Guarda solo cuando el foco sale del editor, no al pasar del nombre a la descripción
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) guardar(false);
+            }}
+          >
             <input
               type="text"
               value={borrador}
@@ -206,21 +213,22 @@ function FilaSubtarea({
               maxLength={LIMITES_TAREA.subtareaTexto}
               onChange={(e) => setBorrador(e.target.value)}
               onKeyDown={alPulsar}
-              onBlur={() => guardar(false)}
               className={`input input-sm w-full ${error ? "input-error" : ""}`}
               aria-label={`Editar el texto de la subtarea «${subtarea.texto}»`}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? `error-${subtarea.id}` : undefined}
             />
+            <label htmlFor={`desc-${subtarea.id}`} className="text-suave block text-xs font-bold">
+              Descripción (opcional)
+            </label>
             <textarea
+              id={`desc-${subtarea.id}`}
               value={borradorDesc}
-              rows={2}
+              rows={1}
               maxLength={LIMITES_TAREA.subtareaDescripcion}
               onChange={(e) => setBorradorDesc(e.target.value)}
               onKeyDown={alPulsar}
-              placeholder="Descripción opcional (Enter guarda · Esc cancela)"
-              className="textarea textarea-sm w-full resize-y text-sm"
-              aria-label={`Editar la descripción de la subtarea «${subtarea.texto}»`}
+              className="textarea textarea-sm field-sizing-content min-h-8! w-full resize-y"
             />
             {error ? (
               <p id={`error-${subtarea.id}`} role="alert" className="text-error text-xs">
@@ -273,7 +281,7 @@ function FilaSubtarea({
         )}
       </div>
 
-      <div className="ml-auto flex shrink-0 items-center">
+      <div className="ml-auto flex shrink-0 items-center gap-0.5">
         <Boton
           data-accion="editar"
           variante="fantasma"
@@ -285,32 +293,32 @@ function FilaSubtarea({
         >
           <Icono nombre="editar" tamano={16} />
         </Boton>
-        <Boton
-          data-accion="subir"
-          variante="fantasma"
-          tamano="pequeno"
-          className={`${claseBoton} ${esPrimera ? "invisible" : ""}`}
-          disabled={inactiva || esPrimera}
-          onClick={() => mover("arriba")}
-          aria-label={`Subir la subtarea «${subtarea.texto}»`}
-          aria-hidden={esPrimera || undefined}
-          tabIndex={esPrimera ? -1 : undefined}
-        >
-          <Icono nombre="chevron-arriba" tamano={16} />
-        </Boton>
-        <Boton
-          data-accion="bajar"
-          variante="fantasma"
-          tamano="pequeno"
-          className={`${claseBoton} ${esUltima ? "invisible" : ""}`}
-          disabled={inactiva || esUltima}
-          onClick={() => mover("abajo")}
-          aria-label={`Bajar la subtarea «${subtarea.texto}»`}
-          aria-hidden={esUltima || undefined}
-          tabIndex={esUltima ? -1 : undefined}
-        >
-          <Icono nombre="chevron-abajo" tamano={16} />
-        </Boton>
+        {esPrimera ? null : (
+          <Boton
+            data-accion="subir"
+            variante="fantasma"
+            tamano="pequeno"
+            className={claseBoton}
+            disabled={inactiva}
+            onClick={() => mover("arriba")}
+            aria-label={`Subir la subtarea «${subtarea.texto}»`}
+          >
+            <Icono nombre="chevron-arriba" tamano={16} />
+          </Boton>
+        )}
+        {esUltima ? null : (
+          <Boton
+            data-accion="bajar"
+            variante="fantasma"
+            tamano="pequeno"
+            className={claseBoton}
+            disabled={inactiva}
+            onClick={() => mover("abajo")}
+            aria-label={`Bajar la subtarea «${subtarea.texto}»`}
+          >
+            <Icono nombre="chevron-abajo" tamano={16} />
+          </Boton>
+        )}
         <Boton
           variante="fantasma"
           tamano="pequeno"
@@ -518,24 +526,20 @@ export function PanelSubtareas({ tareaId, estado, subtareas, cerrada }: Propieda
                 invalido={Boolean(error)}
                 mensaje={error ?? "Presiona Enter para agregar varias seguidas."}
               />
+              {mostrarDescripcion ? (
+                <div className="mt-3">
+                  <AreaTexto
+                    etiqueta="Descripción (opcional)"
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value)}
+                    maxLength={LIMITES_TAREA.subtareaDescripcion}
+                    rows={1}
+                    className="field-sizing-content min-h-10! resize-y"
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
-          {mostrarDescripcion ? (
-            <div className="ml-11">
-              <label htmlFor="descripcion-nueva-subtarea" className="sr-only">
-                Descripción de la nueva subtarea
-              </label>
-              <textarea
-                id="descripcion-nueva-subtarea"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-                maxLength={LIMITES_TAREA.subtareaDescripcion}
-                rows={2}
-                placeholder="Descripción (opcional)"
-                className="textarea textarea-sm w-full resize-y text-sm"
-              />
-            </div>
-          ) : null}
           <div className="flex justify-end">
             {/* Sin estado de carga: un botón deshabilitado bloquearía el Enter de la siguiente subtarea */}
             <Boton type="submit" variante="secundario">
