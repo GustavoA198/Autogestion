@@ -16,7 +16,16 @@ function vaciarPortapapeles() {
 }
 
 // Solo recibe el id: el secreto se pide al servidor al revelar o copiar y no se conserva
-export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }) {
+export function SecretoCredencial({
+  id,
+  nombre,
+  compacto = false,
+}: {
+  id: string;
+  nombre: string;
+  // Copiar como botón de solo icono, para la lista
+  compacto?: boolean;
+}) {
   const [secreto, setSecreto] = useState<string | null>(null);
   const [pendiente, iniciar] = useTransition();
   const { notificar } = useAvisos();
@@ -86,7 +95,11 @@ export function SecretoCredencial({ id, nombre }: { id: string; nombre: string }
           Ocultar
         </Boton>
       )}
-      <Clipboard obtenerTexto={obtenerParaCopiar} etiqueta={`Copiar secreto de ${nombre}`} />
+      <Clipboard
+        compacto={compacto}
+        obtenerTexto={obtenerParaCopiar}
+        etiqueta={`Copiar secreto de ${nombre}`}
+      />
     </div>
   );
 }

@@ -10,6 +10,8 @@ import { CATEGORIAS, esCategoria } from "@/lib/credenciales/categorias";
 import { listarCredenciales } from "@/lib/credenciales/operaciones";
 import { listarProyectos } from "@/lib/proyectos/operaciones";
 import { tiempoRelativo } from "@/lib/tiempo";
+import { Clipboard } from "@/componentes/clipboard";
+import { DireccionCredencial } from "./direccion-credencial";
 import { SecretoCredencial } from "./secreto-credencial";
 
 export const dynamic = "force-dynamic";
@@ -94,6 +96,7 @@ export default async function Credenciales({ searchParams }: PageProps<"/credenc
                     Categoría
                   </th>
                   <th scope="col">Usuario</th>
+                  <th scope="col">URL</th>
                   <th scope="col">Alcance</th>
                   <th scope="col">Secreto</th>
                   <th scope="col" className="xl:max-2xl:hidden">
@@ -120,12 +123,28 @@ export default async function Credenciales({ searchParams }: PageProps<"/credenc
                       </Insignia>
                     </td>
                     <td data-etiqueta="Usuario" className="font-mono text-sm">
-                      <span
-                        className="block max-w-40 truncate"
-                        title={credencial.usuario ?? undefined}
-                      >
-                        {credencial.usuario ?? "—"}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span
+                          className="block max-w-40 truncate"
+                          title={credencial.usuario ?? undefined}
+                        >
+                          {credencial.usuario ?? "—"}
+                        </span>
+                        {credencial.usuario ? (
+                          <Clipboard
+                            compacto
+                            texto={credencial.usuario}
+                            etiqueta={`Copiar usuario de ${credencial.nombre}`}
+                          />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td data-etiqueta="URL">
+                      <DireccionCredencial
+                        direccion={credencial.host}
+                        nombre={credencial.nombre}
+                        truncar
+                      />
                     </td>
                     <td data-etiqueta="Alcance">
                       {credencial.global ? (
@@ -144,7 +163,7 @@ export default async function Credenciales({ searchParams }: PageProps<"/credenc
                       )}
                     </td>
                     <td data-etiqueta="Secreto">
-                      <SecretoCredencial id={credencial.id} nombre={credencial.nombre} />
+                      <SecretoCredencial id={credencial.id} nombre={credencial.nombre} compacto />
                     </td>
                     <td
                       data-etiqueta="Actualizado"

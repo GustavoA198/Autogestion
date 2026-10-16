@@ -105,6 +105,22 @@ describe("Clipboard", () => {
     await userEvent.click(screen.getByRole("button", { name: "Copiar al portapapeles" }));
     expect(screen.getByText("No se pudo copiar", { selector: "button" })).toBeTruthy();
   });
+
+  it("en modo compacto copia sin texto visible y conserva el aviso accesible", async () => {
+    const escribir = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: escribir },
+      configurable: true,
+    });
+    render(<Clipboard compacto texto="dato" etiqueta="Copiar dato" />);
+
+    const boton = screen.getByRole("button", { name: "Copiar dato" });
+    expect(boton.textContent).toBe("");
+    expect(boton.style.minWidth).toBe("");
+    await userEvent.click(boton);
+    expect(escribir).toHaveBeenCalledWith("dato");
+    expect(screen.getByText("Copiado al portapapeles")).toBeTruthy();
+  });
 });
 
 describe("Estados", () => {

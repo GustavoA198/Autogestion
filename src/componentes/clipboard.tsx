@@ -18,9 +18,11 @@ type Propiedades = {
   // Alternativa para valores sensibles: se piden al copiar y no se conservan en el cliente
   obtenerTexto?: () => Promise<string | null>;
   etiqueta?: string;
+  // Botón cuadrado de solo icono para filas de tabla y datos junto a un valor
+  compacto?: boolean;
 };
 
-export function Clipboard({ texto = "", obtenerTexto, etiqueta }: Propiedades) {
+export function Clipboard({ texto = "", obtenerTexto, etiqueta, compacto = false }: Propiedades) {
   const [estado, setEstado] = useState<Estado>("reposo");
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -58,20 +60,21 @@ export function Clipboard({ texto = "", obtenerTexto, etiqueta }: Propiedades) {
         type="button"
         variante="fantasma"
         tamano="pequeno"
-        className="whitespace-nowrap"
+        className={compacto ? "btn-square" : "whitespace-nowrap"}
         onClick={alCopiar}
         disabled={estado === "copiando"}
         // Ancho fijo: el texto cambia entre Copiar / Copiando / Copiado / No se pudo copiar
         // y sin este ancho la tabla se reacomoda horriblemente al copiar
-        style={{ minWidth: "9rem" }}
+        style={compacto ? undefined : { minWidth: "9rem" }}
         aria-label={etiqueta ?? "Copiar al portapapeles"}
+        title={compacto ? (etiqueta ?? "Copiar al portapapeles") : undefined}
       >
         <Icono
           nombre={estado === "copiado" ? "check" : estado === "error" ? "alerta" : "copiar"}
           tamano={16}
           className={estado === "copiado" ? "text-success" : estado === "error" ? "text-error" : ""}
         />
-        {TEXTO_BOTON[estado]}
+        {compacto ? null : TEXTO_BOTON[estado]}
       </Boton>
       <span aria-live="polite" className="sr-only">
         {estado === "copiado"
