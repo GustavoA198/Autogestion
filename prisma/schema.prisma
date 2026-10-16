@@ -203,8 +203,6 @@ model Tarea {
   prioridad      PrioridadTarea @default(MEDIA)
   fechaInicio    DateTime?      @map("fecha_inicio") @db.Date
   fechaLimite    DateTime?      @map("fecha_limite") @db.Date
-  responsable    String?
-  asignadoPor    String?        @map("asignado_por")
   porcentaje     Int            @default(0)   // en desuso: el avance se deriva de las subtareas y no se lee
   proyectoId     String?        @map("proyecto_id")
   activa         Boolean        @default(true)

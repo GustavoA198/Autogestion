@@ -18,7 +18,6 @@ import { Selector } from "@/componentes/selector";
 import { ESTADO_LABEL, PRIORIDAD_LABEL } from "@/lib/tareas/presentacion";
 import { LIMITES_TAREA, type ErroresTarea } from "@/lib/tareas/validacion";
 import type { EstadoFormularioTarea, ValoresTarea } from "./acciones";
-import { CampoPersona } from "./campo-persona";
 import { EditorSubtareas, type FilaSubtarea } from "./listas-creacion";
 
 type Propiedades = {
@@ -53,8 +52,6 @@ const VACIOS: ValoresTarea = {
   prioridad: "MEDIA",
   fechaInicio: "",
   fechaLimite: "",
-  responsable: "",
-  asignadoPor: "",
 };
 
 const DIAS_SEMANA = [
@@ -151,8 +148,6 @@ export function FormularioTarea({
   const errores = estado.errores ?? {};
   const erroresListas = estado.erroresListas;
   const [frecuencia, setFrecuencia] = useState(valores.tipoFrecuencia);
-  const [responsable, setResponsable] = useState(valores.responsable);
-  const [asignadoPor, setAsignadoPor] = useState(valores.asignadoPor);
   const [enlaces, setEnlaces] = useState<FilaEnlace[]>(() =>
     (valores.enlaces ?? []).map((e, i) => ({ clave: i + 1, ...e })),
   );
@@ -308,32 +303,6 @@ export function FormularioTarea({
             mensaje={errores.fechaLimite}
           />
         </div>
-      </SeccionFormulario>
-
-      <SeccionFormulario
-        titulo="Personas"
-        descripcion="Quién la hace y quién la pidió. Texto libre; «Yo» es un atajo."
-      >
-        <FilaCampos>
-          <CampoPersona
-            etiqueta="Responsable"
-            name="responsable"
-            value={responsable}
-            onChange={setResponsable}
-            maxLength={LIMITES_TAREA.responsable}
-            invalido={Boolean(errores.responsable)}
-            mensaje={errores.responsable}
-          />
-          <CampoPersona
-            etiqueta="Asignada por"
-            name="asignadoPor"
-            value={asignadoPor}
-            onChange={setAsignadoPor}
-            maxLength={LIMITES_TAREA.asignadoPor}
-            invalido={Boolean(errores.asignadoPor)}
-            mensaje={errores.asignadoPor}
-          />
-        </FilaCampos>
       </SeccionFormulario>
 
       <SeccionFormulario

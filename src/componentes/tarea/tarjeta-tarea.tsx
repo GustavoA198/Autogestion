@@ -36,7 +36,6 @@ export type DatosTareaTarjeta = {
   prioridad: string;
   // Solo la casilla de cada subtarea: de ahí se deriva el avance
   subtareas: { hecho: boolean }[];
-  responsable: string | null;
 };
 
 type Propiedades = {
@@ -232,16 +231,6 @@ export function TarjetaTarea({
                 <Icono nombre="carpeta" tamano={12} />
                 <span className="truncate" title={tarea.proyecto.nombre}>
                   {tarea.proyecto.nombre}
-                </span>
-              </Insignia>
-            </li>
-          ) : null}
-          {!compacta && tarea.responsable ? (
-            <li className="min-w-0">
-              <Insignia tono="ghost" className="max-w-full gap-1">
-                <Icono nombre="usuario" tamano={12} />
-                <span className="truncate" title={tarea.responsable}>
-                  {tarea.responsable}
                 </span>
               </Insignia>
             </li>

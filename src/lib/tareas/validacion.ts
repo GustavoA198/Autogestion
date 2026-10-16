@@ -7,8 +7,6 @@ export const VALORES_PRIORIDAD = Object.values(PrioridadTarea) as [string, ...st
 export const LIMITES_TAREA = {
   titulo: 200,
   descripcion: 2000,
-  responsable: 120,
-  asignadoPor: 120,
   enlaceEtiqueta: 100,
   enlaceUrl: 2000,
   subtareaTexto: 300,
@@ -27,9 +25,7 @@ export type CamposTarea =
   | "estado"
   | "prioridad"
   | "fechaInicio"
-  | "fechaLimite"
-  | "responsable"
-  | "asignadoPor";
+  | "fechaLimite";
 export type ErroresTarea = Partial<Record<CamposTarea, string>>;
 
 export type DatosTarea = {
@@ -45,14 +41,12 @@ export type DatosTarea = {
   prioridad?: PrioridadTarea;
   fechaInicio?: Date | null;
   fechaLimite?: Date | null;
-  responsable?: string | null;
-  asignadoPor?: string | null;
   // Solo COMPLETADA y CANCELADA dejan la tarea inactiva
   activa?: boolean;
 };
 
 type CampoOpcional =
-  "estado" | "prioridad" | "fechaInicio" | "fechaLimite" | "responsable" | "asignadoPor";
+  "estado" | "prioridad" | "fechaInicio" | "fechaLimite";
 
 export type EntradaTarea = Record<Exclude<CamposTarea, "proyectoId" | CampoOpcional>, unknown> & {
   proyectoId: unknown;
@@ -103,14 +97,6 @@ function fechaOpcional(valor: unknown): { valor?: Date | null; invalida?: boolea
   return fecha ? { valor: fecha } : { invalida: true };
 }
 
-// Texto libre opcional: undefined no se toca, vacío limpia
-function textoOpcional(valor: unknown): string | null | undefined {
-  if (valor === undefined) return undefined;
-  if (typeof valor !== "string") return null;
-  const limpio = valor.trim();
-  return limpio === "" ? null : limpio;
-}
-
 // Una tarea sigue activa salvo que esté completada o cancelada
 export function estaAbierta(estado: string): boolean {
   return estado !== "COMPLETADA" && estado !== "CANCELADA";
@@ -130,8 +116,6 @@ export function validarTarea(entrada: EntradaTarea): ResultadoValidacion {
   const prioridad = comoTexto(entrada.prioridad);
   const inicio = fechaOpcional(entrada.fechaInicio);
   const limite = fechaOpcional(entrada.fechaLimite);
-  const responsable = textoOpcional(entrada.responsable);
-  const asignadoPor = textoOpcional(entrada.asignadoPor);
 
   // Errores de campo individual
   const errores: ErroresTarea = {};
@@ -184,14 +168,6 @@ export function validarTarea(entrada: EntradaTarea): ResultadoValidacion {
     errores.fechaLimite = "La fecha límite no puede ser anterior a la de inicio.";
   }
 
-  if (responsable && responsable.length > LIMITES_TAREA.responsable) {
-    errores.responsable = `El responsable admite hasta ${LIMITES_TAREA.responsable} caracteres.`;
-  }
-
-  if (asignadoPor && asignadoPor.length > LIMITES_TAREA.asignadoPor) {
-    errores.asignadoPor = `Este campo admite hasta ${LIMITES_TAREA.asignadoPor} caracteres.`;
-  }
-
   if (Object.keys(errores).length > 0) return { ok: false, errores };
 
   const estadoFinal = estado === "" ? undefined : (estado as EstadoTarea);
@@ -210,8 +186,6 @@ export function validarTarea(entrada: EntradaTarea): ResultadoValidacion {
       prioridad: prioridad === "" ? undefined : (prioridad as PrioridadTarea),
       fechaInicio: inicio.valor,
       fechaLimite: limite.valor,
-      responsable,
-      asignadoPor,
       activa: estadoFinal === undefined ? undefined : estaAbierta(estadoFinal),
     },
   };

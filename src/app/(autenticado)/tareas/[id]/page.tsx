@@ -200,13 +200,6 @@ export default async function DetalleTarea({ params }: PageProps<"/tareas/[id]">
             </dl>
           </Tarjeta>
 
-          <Tarjeta titulo="Personas">
-            <dl className="space-y-3">
-              <DatoLateral etiqueta="Responsable">{tarea.responsable}</DatoLateral>
-              <DatoLateral etiqueta="Asignada por">{tarea.asignadoPor}</DatoLateral>
-            </dl>
-          </Tarjeta>
-
           <Tarjeta titulo="Recurrencia">
             <dl className="space-y-3">
               <DatoLateral etiqueta="Frecuencia">
